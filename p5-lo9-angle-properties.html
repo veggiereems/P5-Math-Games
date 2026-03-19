@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angle Properties</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#7c3aed;--accent-lt:#c4b5fd;--accent-bg:#f5f3ff;--bg:#f5f3ff;--soft:#6b7280;--text:#3b0764;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:12px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,4vw,2rem);color:var(--accent);}
+  header p{font-size:.78rem;color:var(--soft);font-weight:700;margin-top:2px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;padding:6px 16px;border:2.5px solid transparent;border-radius:50px;cursor:pointer;background:#fff;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:#16a34a;border-color:#4ade80;}.level-btn.medium{color:var(--accent);border-color:var(--accent-lt);}.level-btn.hard{color:#dc2626;border-color:#fca5a5;}
+  .level-btn.easy.active{background:#4ade80;color:#fff;}.level-btn.medium.active{background:var(--accent-lt);color:#fff;}.level-btn.hard.active{background:#fca5a5;color:#fff;}
+  .stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:10px;}
+  .stat-box{background:#fff;border-radius:14px;padding:7px 16px;text-align:center;min-width:78px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .stat-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .stat-val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .pts-box .stat-val{color:var(--accent);}.streak-box .stat-val{color:#f97316;}.pb-box .stat-val{color:#8b5cf6;}
+  .prog-wrap{width:100%;max-width:500px;margin-bottom:12px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:11px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent-lt),var(--accent));transition:width .4s;width:0%;}
+  .prog-info{display:flex;justify-content:space-between;margin-top:3px;font-size:.7rem;font-weight:800;color:var(--soft);}
+  .milestone{color:var(--accent);}
+  .game-card{background:#fff;border-radius:20px;padding:20px 16px;width:100%;max-width:500px;box-shadow:0 8px 32px rgba(124,58,237,.1);border-top:5px solid var(--accent-lt);display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .badge{font-size:.72rem;font-weight:800;background:var(--accent-bg);color:var(--accent);padding:4px 14px;border-radius:50px;}
+  .hint-box{background:var(--accent-bg);border-radius:12px;padding:8px 14px;font-size:.78rem;font-weight:700;color:var(--accent);text-align:center;width:100%;}
+  .svg-wrap{width:100%;max-width:300px;margin:0 auto;}
+  svg{width:100%;height:auto;display:block;}
+  .question-text{font-size:.92rem;font-weight:800;text-align:center;color:var(--text);}
+  /* MCQ layout for easy */
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+  .opt-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem;padding:12px 8px;border:3px solid #e5e7eb;border-radius:16px;background:#f9fafb;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+  .opt-btn:hover{border-color:var(--accent-lt);background:var(--accent-bg);}
+  .opt-btn.correct{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+  .opt-btn.wrong{border-color:#d97706;background:#fef3c7;color:#92400e;}
+  .opt-btn.reveal{border-color:#16a34a;background:#dcfce7;}
+  .opt-btn:disabled{cursor:default;}
+  /* Number input for medium/hard */
+  .ans-row{display:flex;align-items:center;gap:8px;justify-content:center;}
+  .ans-input{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,5vw,2rem);width:100px;text-align:center;border:3px solid #d1d5db;border-radius:14px;padding:8px;outline:none;background:#f9fafb;color:var(--text);-moz-appearance:textfield;}
+  .ans-input::-webkit-outer-spin-button,.ans-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+  .ans-input:focus{border-color:var(--accent-lt);background:var(--accent-bg);}
+  .ans-input.ok{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+  .ans-input.wrong{border-color:#d97706;background:#fef3c7;color:#92400e;}
+  .deg-sym{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--soft);}
+  .check-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:11px 32px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #5b21b6;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+  .check-btn:hover{transform:translateY(-2px);}.check-btn:active{transform:translateY(2px);}
+  .check-btn:disabled{opacity:.4;cursor:default;transform:none;}
+  .feedback{width:100%;border-radius:14px;padding:11px 14px;font-size:.88rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:#dcfce7;color:#16a34a;display:block;}
+  .feedback.wrong{background:#fef3c7;color:#92400e;display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;background:#60a5fa;color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #2563eb;display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>📐 Angle Properties</h1><p>Primary 5 · Angles on lines, at points, vertically opposite</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="stats-row">
+  <div class="stat-box pts-box"><div class="stat-lbl">Points</div><div class="stat-val" id="pts-val">0</div></div>
+  <div class="stat-box streak-box"><div class="stat-lbl">Streak</div><div class="stat-val" id="streak-val">0</div></div>
+  <div class="stat-box pb-box"><div class="stat-lbl">Best</div><div class="stat-val" id="pb-val">0</div></div>
+</div>
+<div class="prog-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-info"><span id="q-count">0 / 10</span><span class="milestone" id="milestone">🎯 First goal: 30 pts</span></div>
+</div>
+<div class="game-card" id="game-card">
+  <span class="badge" id="badge"></span>
+  <div class="hint-box" id="hint-box"></div>
+  <div class="svg-wrap" id="svg-wrap"></div>
+  <div class="question-text" id="question-text"></div>
+  <div id="answer-area"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset</button>
+<script>
+const TOTAL=10;
+let pts=0,streak=0,pb=0,qCount=0,answered=false,level='easy';
+let correctAnswer=0, qType='';
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const cx=150,cy=150,R=90;
+
+const CFG={
+  easy:{badge:'⭐ Identify angle type',hint:'Acute < 90° · Right = 90° · Obtuse: 90°–180° · Straight = 180°'},
+  medium:{badge:'🔥 Angles on a straight line',hint:'Angles on a straight line add up to 180°'},
+  hard:{badge:'💎 Angles at a point · Vertically opposite',hint:'Angles at a point = 360° · Vertically opposite angles are equal'}
+};
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');generateQ();}
+
+function polarPt(cx,cy,r,deg){const rad=deg*Math.PI/180;return[cx+r*Math.cos(rad),cy-r*Math.sin(rad)];}
+function arcPath(cx,cy,r,a1,a2){
+  const p1=polarPt(cx,cy,r,a1),p2=polarPt(cx,cy,r,a2);
+  const large=Math.abs(a2-a1)>180?1:0;
+  return `M${cx},${cy} L${p1[0].toFixed(1)},${p1[1].toFixed(1)} A${r},${r} 0 ${large} 0 ${p2[0].toFixed(1)},${p2[1].toFixed(1)} Z`;
+}
+
+function makeSVGbase(){return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">`;}
+
+// Easy: identify angle type from SVG
+function genEasy(){
+  const types=['acute','right','obtuse','straight'];
+  const type=types[rand(0,3)];
+  let deg;
+  if(type==='acute')deg=rand(15,89);
+  else if(type==='right')deg=90;
+  else if(type==='obtuse')deg=rand(91,179);
+  else deg=180;
+  const baseAngle=rand(0,60);
+  const p1=polarPt(cx,cy,R,baseAngle);
+  const p2=polarPt(cx,cy,R,baseAngle+deg);
+  const arcR=30;
+  const p1a=polarPt(cx,cy,arcR,baseAngle);
+  const p2a=polarPt(cx,cy,arcR,baseAngle+deg);
+  let svg=makeSVGbase();
+  svg+=`<line x1="${cx}" y1="${cy}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>`;
+  svg+=`<line x1="${cx}" y1="${cy}" x2="${p2[0].toFixed(1)}" y2="${p2[1].toFixed(1)}" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>`;
+  if(type==='right'){
+    const ra1=polarPt(cx,cy,20,baseAngle);
+    const ra2=polarPt(cx,cy,20,baseAngle+90);
+    const corner=[ra1[0]+(ra2[0]-cx),ra1[1]+(ra2[1]-cy)];
+    svg+=`<polyline points="${ra1[0].toFixed(1)},${ra1[1].toFixed(1)} ${corner[0].toFixed(1)},${corner[1].toFixed(1)} ${ra2[0].toFixed(1)},${ra2[1].toFixed(1)}" fill="none" stroke="#7c3aed" stroke-width="2"/>`;
+  } else {
+    svg+=`<path d="M ${p1a[0].toFixed(1)},${p1a[1].toFixed(1)} A ${arcR},${arcR} 0 0 0 ${p2a[0].toFixed(1)},${p2a[1].toFixed(1)}" fill="none" stroke="#a855f7" stroke-width="2.5"/>`;
+  }
+  const midAngle=baseAngle+deg/2;
+  const lp=polarPt(cx,cy,52,midAngle);
+  svg+=`<text x="${lp[0].toFixed(1)}" y="${(lp[1]+5).toFixed(1)}" text-anchor="middle" font-family="Fredoka One,cursive" font-size="18" fill="#7c3aed">?</text>`;
+  svg+=`</svg>`;
+  const typeMap={'acute':'acute','right':'right','obtuse':'obtuse','straight':'straight_line'};
+  return{svg,answer:typeMap[type]};
+}
+
+// Medium: angles on a straight line
+function genMedium(){
+  const n=rand(2,3); // 2 or 3 angles on a line
+  let angles=[];
+  if(n===2){const a=rand(20,160);angles=[a,180-a];}
+  else{const a=rand(20,100),b=rand(20,100);if(a+b>=180){return genMedium();}angles=[a,b,180-a-b];}
+  const missingIdx=rand(0,n-1);
+  const missing=angles[missingIdx];
+  const given=angles.filter((_,i)=>i!==missingIdx);
+  // Build SVG showing n rays from a point on a horizontal line
+  let svg=makeSVGbase();
+  // baseline
+  svg+=`<line x1="20" y1="${cy}" x2="280" y2="${cy}" stroke="#374151" stroke-width="3" stroke-linecap="round"/>`;
+  // rays
+  let cumAngle=0;
+  for(let i=0;i<n;i++){
+    cumAngle+=angles[i];
+    if(i<n-1){
+      const p=polarPt(cx,cy,R,180-cumAngle); // angles measured from positive x-axis going CCW... but we want on top of line
+      // Actually measure from left side of line (180°) rotating CW
+      const rayAngle=180-cumAngle;
+      const rp=polarPt(cx,cy,R,rayAngle);
+      svg+=`<line x1="${cx}" y1="${cy}" x2="${rp[0].toFixed(1)}" y2="${rp[1].toFixed(1)}" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>`;
+    }
+  }
+  // label each angle
+  cumAngle=0;
+  for(let i=0;i<n;i++){
+    const startA=180-cumAngle;
+    const endA=180-cumAngle-angles[i];
+    const midA=(startA+endA)/2;
+    const lp=polarPt(cx,cy,45,midA);
+    const lbl=i===missingIdx?'a':angles[i]+'°';
+    svg+=`<text x="${lp[0].toFixed(1)}" y="${(lp[1]+5).toFixed(1)}" text-anchor="middle" font-family="Fredoka One,cursive" font-size="16" fill="${i===missingIdx?'#dc2626':'#374151'}">${lbl}</text>`;
+    // arc for this sector
+    const arcR=22;
+    const p1a=polarPt(cx,cy,arcR,endA);
+    const p2a=polarPt(cx,cy,arcR,startA);
+    const arcColor=i===missingIdx?'#dc2626':'#7c3aed';
+    svg+=`<path d="M ${p1a[0].toFixed(1)},${p1a[1].toFixed(1)} A ${arcR},${arcR} 0 0 0 ${p2a[0].toFixed(1)},${p2a[1].toFixed(1)}" fill="none" stroke="${arcColor}" stroke-width="1.5"/>`;
+    cumAngle+=angles[i];
+  }
+  svg+=`</svg>`;
+  const given_str=given.map(x=>x+'°').join(' and ');
+  return{svg,answer:missing,qText:'The angles on a straight line are '+given_str+' and a. Find a.',type:'number'};
+}
+
+// Hard: angles at a point or vertically opposite
+function genHard(){
+  const t=rand(0,1);
+  if(t===0){
+    // Angles at a point
+    const n=rand(3,4);
+    let angles=[];
+    if(n===3){const a=rand(60,160),b=rand(60,160);if(a+b>=360)return genHard();angles=[a,b,360-a-b];}
+    else{const a=rand(50,120),b=rand(50,120),c=rand(50,120);if(a+b+c>=360)return genHard();angles=[a,b,c,360-a-b-c];}
+    const missingIdx=rand(0,n-1);
+    const missing=angles[missingIdx];
+    let svg=makeSVGbase();
+    let cumAngle=0;
+    for(let i=0;i<n;i++){
+      const p=polarPt(cx,cy,R,cumAngle);
+      svg+=`<line x1="${cx}" y1="${cy}" x2="${p[0].toFixed(1)}" y2="${p[1].toFixed(1)}" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>`;
+      const midA=cumAngle+angles[i]/2;
+      const lp=polarPt(cx,cy,55,midA);
+      const lbl=i===missingIdx?'a':angles[i]+'°';
+      svg+=`<text x="${lp[0].toFixed(1)}" y="${(lp[1]+5).toFixed(1)}" text-anchor="middle" font-family="Fredoka One,cursive" font-size="15" fill="${i===missingIdx?'#dc2626':'#374151'}">${lbl}</text>`;
+      // arc
+      const arcR=20;
+      const pa1=polarPt(cx,cy,arcR,cumAngle);
+      const pa2=polarPt(cx,cy,arcR,cumAngle+angles[i]);
+      const arcColor=i===missingIdx?'#dc2626':'#7c3aed';
+      svg+=`<path d="M ${pa1[0].toFixed(1)},${pa1[1].toFixed(1)} A ${arcR},${arcR} 0 0 0 ${pa2[0].toFixed(1)},${pa2[1].toFixed(1)}" fill="none" stroke="${arcColor}" stroke-width="1.5"/>`;
+      cumAngle+=angles[i];
+    }
+    svg+=`</svg>`;
+    const given=angles.filter((_,i)=>i!==missingIdx).map(x=>x+'°').join(', ');
+    return{svg,answer:missing,qText:'The angles at a point are '+given+' and a. Find a.',type:'number'};
+  } else {
+    // Vertically opposite
+    const a=rand(25,155);const b=180-a;const c=a,d=b;
+    // ask for one of the vertically opposite angles
+    const asking=rand(0,1)?'c':'d';
+    const ans=asking==='c'?c:d;
+    let svg=makeSVGbase();
+    const p1=polarPt(cx,cy,R,0),p2=polarPt(cx,cy,R,180);
+    const p3=polarPt(cx,cy,R,a),p4=polarPt(cx,cy,R,180+a);
+    svg+=`<line x1="${p2[0].toFixed(1)}" y1="${p2[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#374151" stroke-width="2.5" stroke-linecap="round"/>`;
+    svg+=`<line x1="${p4[0].toFixed(1)}" y1="${p4[1].toFixed(1)}" x2="${p3[0].toFixed(1)}" y2="${p3[1].toFixed(1)}" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>`;
+    // arcs for all 4 sectors: angles are a, b, a(vert opp), b(vert opp)
+    const sectors=[
+      {start:0,  size:a, lbl:a+'°', isAsk:false},
+      {start:a,  size:b, lbl:b+'°', isAsk:false},
+      {start:180,size:a, lbl:'c',   isAsk:asking==='c'},
+      {start:180+a,size:b, lbl:'d', isAsk:asking==='d'},
+    ];
+    const arcR=22;
+    sectors.forEach(({start,size,lbl,isAsk})=>{
+      const pa1=polarPt(cx,cy,arcR,start);
+      const pa2=polarPt(cx,cy,arcR,start+size);
+      const arcColor=isAsk?'#dc2626':'#a855f7';
+      svg+=`<path d="M ${pa1[0].toFixed(1)},${pa1[1].toFixed(1)} A ${arcR},${arcR} 0 0 0 ${pa2[0].toFixed(1)},${pa2[1].toFixed(1)}" fill="none" stroke="${arcColor}" stroke-width="1.5"/>`;
+      const midA=start+size/2;
+      const lp=polarPt(cx,cy,50,midA);
+      svg+=`<text x="${lp[0].toFixed(1)}" y="${(lp[1]+5).toFixed(1)}" text-anchor="middle" font-family="Fredoka One,cursive" font-size="15" fill="${isAsk?'#dc2626':'#374151'}">${lbl}</text>`;
+    });
+    svg+=`</svg>`;
+    return{svg,answer:ans,qText:'Two straight lines cross. Find angle '+asking+'.',type:'number'};
+  }
+}
+
+function generateQ(){
+  answered=false;
+  document.getElementById('badge').textContent=CFG[level].badge;
+  document.getElementById('hint-box').textContent=CFG[level].hint;
+  let q;
+  if(level==='easy'){q=genEasy();qType='mcq';}
+  else if(level==='medium'){q=genMedium();qType='number';}
+  else{q=genHard();qType='number';}
+  correctAnswer=q.type==='number'?q.answer:q.answer;
+  document.getElementById('svg-wrap').innerHTML=q.svg;
+  document.getElementById('question-text').textContent=q.qText||'What type of angle is this?';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+  const aa=document.getElementById('answer-area');
+  if(qType==='mcq'){
+    const types=[
+      {val:'acute',label:'Acute (< 90°)'},
+      {val:'right',label:'Right (= 90°)'},
+      {val:'obtuse',label:'Obtuse (90°–180°)'},
+      {val:'straight_line',label:'Straight (= 180°)'},
+    ];
+    aa.innerHTML='<div class="options">'+types.map(t=>`<button class="opt-btn" data-val="${t.val}" onclick="selectOpt(this,'${t.val}')">${t.label}</button>`).join('')+'</div>';
+    correctAnswer=q.answer;
+  } else {
+    aa.innerHTML='<div class="ans-row"><input class="ans-input" id="ans-input" type="number" placeholder="?" autocomplete="off" inputmode="numeric"/><span class="deg-sym">°</span></div><button class="check-btn" id="check-btn" onclick="submitNumber()">Check ✓</button>';
+    document.getElementById('ans-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitNumber();});
+    setTimeout(()=>{const i=document.getElementById('ans-input');if(i)i.focus();},80);
+  }
+}
+
+function selectOpt(btn,val){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  const correct=val===correctAnswer;
+  if(correct){
+    btn.classList.add('correct');handleCorrect();
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.opt-btn').forEach(b=>{if(b.dataset.val===correctAnswer)b.classList.add('reveal');});
+    handleWrong('That angle is '+correctAnswer.replace('_',' '));
+  }
+}
+
+function submitNumber(){
+  if(answered)return;
+  const inp=document.getElementById('ans-input');if(!inp)return;
+  const raw=inp.value.trim();
+  if(raw===''){inp.style.borderColor='#fbbf24';setTimeout(()=>{inp.style.borderColor='';},600);return;}
+  const val=parseInt(raw,10);if(isNaN(val))return;
+  answered=true;inp.disabled=true;
+  const btn=document.getElementById('check-btn');if(btn)btn.disabled=true;
+  if(val===correctAnswer){inp.classList.add('ok');handleCorrect();}
+  else{inp.classList.add('wrong');handleWrong('Not quite — the answer is '+correctAnswer+'°');}
+}
+
+function handleCorrect(){
+  streak++;
+  let bonus=0,bonusMsg='';
+  if(streak>=5){bonus=10;bonusMsg=' · ⚡ Hot streak! +10';}
+  else if(streak>=3){bonus=5;bonusMsg=' · 🔥 +5 streak bonus!';}
+  if(Math.random()<0.1){bonus+=5;bonusMsg+=' · 🍀 Lucky +5!';}
+  pts+=10+bonus;if(pts>pb)pb=pts;qCount++;updateUI();
+  document.getElementById('feedback').className='feedback ok';
+  document.getElementById('feedback').textContent='✓ Correct! +10 pts'+bonusMsg;
+  launchConfetti();
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,700);
+}
+function handleWrong(msg){
+  streak=0;qCount++;updateUI();
+  document.getElementById('feedback').className='feedback wrong';
+  document.getElementById('feedback').textContent=msg;
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,700);
+}
+
+function nextQ(){generateQ();}
+function updateUI(){
+  document.getElementById('pts-val').textContent=pts;document.getElementById('streak-val').textContent=streak;document.getElementById('pb-val').textContent=pb;
+  document.getElementById('q-count').textContent=qCount+' / '+TOTAL;document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';
+  const m=document.getElementById('milestone');
+  if(pts>=90)m.textContent='🏆 Brilliant!';else if(pts>=60)m.textContent='🌟 Next goal: 90 pts';else if(pts>=30)m.textContent='✅ Next goal: 60 pts';else m.textContent='🎯 First goal: 30 pts';
+}
+function showEndScreen(){
+  const em=pts>=90?'🏆':pts>=60?'🌟':'💪';
+  const msg=pts>=90?'Angle ace!':pts>=60?'Great work!':'Keep practising!';
+  document.getElementById('game-card').innerHTML='<div style="text-align:center;padding:16px 0;"><div style="font-size:3rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.3rem;margin-top:8px;">'+msg+'</div><div style="font-size:.9rem;color:var(--soft);margin-top:6px;font-weight:700;">Score: '+pts+' pts · Best: '+pb+' pts</div><button onclick="resetGame()" style="margin-top:16px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:.9rem;padding:10px 28px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;">Play Again!</button></div>';
+  if(pts>=90)launchConfetti(180);
+}
+function resetGame(){
+  pts=0;streak=0;qCount=0;
+  document.getElementById('game-card').innerHTML='<span class="badge" id="badge"></span><div class="hint-box" id="hint-box"></div><div class="svg-wrap" id="svg-wrap"></div><div class="question-text" id="question-text"></div><div id="answer-area"></div><div class="feedback" id="feedback"></div><button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>';
+  updateUI();generateQ();
+}
+generateQ();
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#c4b5fd','#34d399','#fbbf24','#f472b6','#60a5fa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*.07+.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+</script>
+</body>
+</html>

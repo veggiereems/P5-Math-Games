@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volume of Cube & Cuboid</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#1d4ed8;--accent-lt:#93c5fd;--accent-bg:#eff6ff;--bg:#eff6ff;--soft:#6b7280;--text:#1e3a5f;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:12px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,4vw,2rem);color:var(--accent);}
+  header p{font-size:.78rem;color:var(--soft);font-weight:700;margin-top:2px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;padding:6px 16px;border:2.5px solid transparent;border-radius:50px;cursor:pointer;background:#fff;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:#16a34a;border-color:#4ade80;}.level-btn.medium{color:var(--accent);border-color:var(--accent-lt);}.level-btn.hard{color:#dc2626;border-color:#fca5a5;}
+  .level-btn.easy.active{background:#4ade80;color:#fff;}.level-btn.medium.active{background:var(--accent-lt);color:#fff;}.level-btn.hard.active{background:#fca5a5;color:#fff;}
+  .stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:10px;}
+  .stat-box{background:#fff;border-radius:14px;padding:7px 16px;text-align:center;min-width:78px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .stat-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .stat-val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .pts-box .stat-val{color:var(--accent);}.streak-box .stat-val{color:#f97316;}.pb-box .stat-val{color:#8b5cf6;}
+  .prog-wrap{width:100%;max-width:500px;margin-bottom:12px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:11px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent-lt),var(--accent));transition:width .4s;width:0%;}
+  .prog-info{display:flex;justify-content:space-between;margin-top:3px;font-size:.7rem;font-weight:800;color:var(--soft);}
+  .milestone{color:var(--accent);}
+  .game-card{background:#fff;border-radius:20px;padding:22px 18px;width:100%;max-width:500px;box-shadow:0 8px 32px rgba(29,78,216,.1);border-top:5px solid var(--accent-lt);display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .badge{font-size:.72rem;font-weight:800;background:var(--accent-bg);color:var(--accent);padding:4px 14px;border-radius:50px;}
+  .hint-box{background:var(--accent-bg);border-radius:12px;padding:8px 14px;font-size:.78rem;font-weight:700;color:var(--accent);text-align:center;width:100%;}
+  .svg-wrap{width:100%;max-width:260px;margin:0 auto;}
+  svg{width:100%;height:auto;}
+  .question-text{font-size:.95rem;font-weight:800;text-align:center;color:var(--text);line-height:1.5;}
+  .eq-row{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .eq-label{font-family:'Fredoka One',cursive;font-size:1rem;color:var(--soft);}
+  .ans-input{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,5vw,2rem);width:130px;text-align:center;border:3px solid #d1d5db;border-radius:14px;padding:8px;outline:none;background:#f9fafb;color:var(--text);-moz-appearance:textfield;}
+  .ans-input::-webkit-outer-spin-button,.ans-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+  .ans-input:focus{border-color:var(--accent-lt);background:var(--accent-bg);}
+  .ans-input.ok{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+  .ans-input.wrong{border-color:#d97706;background:#fef3c7;color:#92400e;}
+  .check-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:11px 32px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #1e40af;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+  .check-btn:hover{transform:translateY(-2px);}.check-btn:active{transform:translateY(2px);}
+  .check-btn:disabled{opacity:.4;cursor:default;transform:none;}
+  .feedback{width:100%;border-radius:14px;padding:11px 14px;font-size:.88rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:#dcfce7;color:#16a34a;display:block;}
+  .feedback.wrong{background:#fef3c7;color:#92400e;display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;background:#60a5fa;color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #2563eb;display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>📦 Volume of Cuboid</h1><p>Primary 5 · l × b × h</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="stats-row">
+  <div class="stat-box pts-box"><div class="stat-lbl">Points</div><div class="stat-val" id="pts-val">0</div></div>
+  <div class="stat-box streak-box"><div class="stat-lbl">Streak</div><div class="stat-val" id="streak-val">0</div></div>
+  <div class="stat-box pb-box"><div class="stat-lbl">Best</div><div class="stat-val" id="pb-val">0</div></div>
+</div>
+<div class="prog-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-info"><span id="q-count">0 / 10</span><span class="milestone" id="milestone">🎯 First goal: 30 pts</span></div>
+</div>
+<div class="game-card" id="game-card">
+  <span class="badge" id="badge"></span>
+  <div class="hint-box" id="hint-box"></div>
+  <div class="svg-wrap" id="svg-wrap"></div>
+  <div class="question-text" id="question-text"></div>
+  <div class="eq-row" id="eq-row"></div>
+  <button class="check-btn" id="check-btn" onclick="submitAnswer()">Check ✓</button>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset</button>
+<script>
+const TOTAL=10;
+let pts=0,streak=0,pb=0,qCount=0,answered=false,level='easy';
+let correctAnswer=0;
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+const CFG={
+  easy:{badge:'⭐ Find the volume of the cuboid',hint:'Volume = length × breadth × height'},
+  medium:{badge:'🔥 Volume of water in a tank',hint:'Volume of water = length × breadth × height of water'},
+  hard:{badge:'💎 Water problems',hint:''}
+};
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');generateQ();}
+
+// Isometric cuboid — dynamic viewBox, optional water fill
+function drawCuboid(l,b,h,waterDepth){
+  const sc=Math.min(18,140/Math.max(l,b,h),180/(l+b*0.55));
+  const ls=l*sc,bs=b*sc,hs=h*sc;
+  const dx=bs*0.55,dy=bs*0.28;
+  const padL=44,padT=22,padR=54,padB=28;
+  const W=Math.ceil(ls+dx+padL+padR);
+  const H=Math.ceil(hs+dy+padT+padB);
+  const ox=padL, oy=padT+dy+hs;
+  const P={
+    a:[ox,oy],      b:[ox+ls,oy],
+    c:[ox+ls,oy-hs],d:[ox,oy-hs],
+    e:[ox+dx,oy-dy],f:[ox+ls+dx,oy-dy],
+    g:[ox+ls+dx,oy-hs-dy],h:[ox+dx,oy-hs-dy]
+  };
+  const fp=p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // Water fill
+  if(waterDepth){
+    const ws=waterDepth*sc;
+    svg+=`<polygon points="${fp([ox,oy])} ${fp([ox+ls,oy])} ${fp([ox+ls,oy-ws])} ${fp([ox,oy-ws])}" fill="#bae6fd" opacity="0.75"/>`;
+    svg+=`<polygon points="${fp([ox,oy-ws])} ${fp([ox+ls,oy-ws])} ${fp([ox+ls+dx,oy-ws-dy])} ${fp([ox+dx,oy-ws-dy])}" fill="#7dd3fc" opacity="0.75"/>`;
+    svg+=`<polygon points="${fp([ox+ls,oy])} ${fp([ox+ls+dx,oy-dy])} ${fp([ox+ls+dx,oy-ws-dy])} ${fp([ox+ls,oy-ws])}" fill="#93c5fd" opacity="0.75"/>`;
+    svg+=`<line x1="${(ox).toFixed(1)}" y1="${(oy-ws).toFixed(1)}" x2="${(ox+ls).toFixed(1)}" y2="${(oy-ws).toFixed(1)}" stroke="#0284c7" stroke-width="1.5"/>`;
+    svg+=`<line x1="${(ox+ls).toFixed(1)}" y1="${(oy-ws).toFixed(1)}" x2="${(ox+ls+dx).toFixed(1)}" y2="${(oy-ws-dy).toFixed(1)}" stroke="#0284c7" stroke-width="1.5"/>`;
+    // Water depth label on left
+    svg+=`<text x="${(ox-8).toFixed(1)}" y="${(oy-ws/2+4).toFixed(1)}" text-anchor="end" font-family="Fredoka One,cursive" font-size="12" fill="#0284c7">${waterDepth} cm</text>`;
+    svg+=`<line x1="${(ox-4).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(ox-4).toFixed(1)}" y2="${(oy-ws).toFixed(1)}" stroke="#0284c7" stroke-width="1.2"/>`;
+  }
+  // Faces (semi-transparent so water shows through)
+  svg+=`<polygon points="${fp(P.a)} ${fp(P.b)} ${fp(P.c)} ${fp(P.d)}" fill="rgba(219,234,254,0.55)" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round"/>`;
+  svg+=`<polygon points="${fp(P.d)} ${fp(P.c)} ${fp(P.g)} ${fp(P.h)}" fill="rgba(191,219,254,0.55)" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round"/>`;
+  svg+=`<polygon points="${fp(P.b)} ${fp(P.f)} ${fp(P.g)} ${fp(P.c)}" fill="rgba(147,197,253,0.55)" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round"/>`;
+  // Length — below front bottom edge
+  svg+=`<text x="${((P.a[0]+P.b[0])/2).toFixed(1)}" y="${(oy+18).toFixed(1)}" text-anchor="middle" font-family="Fredoka One,cursive" font-size="13" fill="#1d4ed8">${l} cm</text>`;
+  // Breadth — midpoint of the top-right diagonal edge, offset outward
+  const bMidX=(P.b[0]+P.f[0])/2+8, bMidY=(P.b[1]+P.f[1])/2+4;
+  svg+=`<text x="${bMidX.toFixed(1)}" y="${bMidY.toFixed(1)}" text-anchor="start" font-family="Fredoka One,cursive" font-size="13" fill="#1d4ed8">${b} cm</text>`;
+  // Height — right of back-right vertical edge (P.f to P.g), avoids front face lines
+  svg+=`<text x="${(P.f[0]+6).toFixed(1)}" y="${((P.f[1]+P.g[1])/2+4).toFixed(1)}" text-anchor="start" font-family="Fredoka One,cursive" font-size="13" fill="#1d4ed8">${h} cm</text>`;
+  svg+=`</svg>`;
+  return svg;
+}
+
+function genEasy(){
+  const t=rand(0,1);
+  if(t===0){
+    const s=rand(2,7);
+    return{svg:drawCuboid(s,s,s,null),qText:'Find the volume of this cube.',ans:s*s*s,unit:'cm³'};
+  }
+  const l=rand(2,8),b=rand(2,6),h=rand(2,6);
+  return{svg:drawCuboid(l,b,h,null),qText:'Find the volume of this cuboid.',ans:l*b*h,unit:'cm³'};
+}
+
+function genMedium(){
+  const l=rand(4,12),b=rand(3,8),h=rand(5,12);
+  const waterH=rand(2,h-1);
+  return{svg:drawCuboid(l,b,h,waterH),qText:'A tank is '+l+' cm long, '+b+' cm wide, and '+h+' cm tall.\nWater fills it to a depth of '+waterH+' cm.\nWhat is the volume of water in cm³?',ans:l*b*waterH,unit:'cm³'};
+}
+
+function genHard(){
+  const t=rand(0,2);
+  const l=rand(4,12),b=rand(3,8),h=rand(6,14);
+  const waterH=rand(2,h-2);
+  if(t===0){
+    const space=l*b*(h-waterH);
+    return{svg:null,qText:'A tank is '+l+' cm long, '+b+' cm wide, and '+h+' cm tall. The height of the water in the tank is '+waterH+' cm.\nHow much more water (in cm³) is needed to fill it to the brim?',ans:space,unit:'cm³',nosvg:true};
+  }
+  if(t===1){
+    const addH=rand(1,h-waterH);
+    const addVol=l*b*addH;
+    const newVol=l*b*(waterH+addH);
+    return{svg:null,qText:'A tank is '+l+' cm long, '+b+' cm wide, and '+h+' cm tall. The height of the water in the tank is '+waterH+' cm.\n'+addVol+' cm³ of water is added.\nWhat is the new volume of water in the tank?',ans:newVol,unit:'cm³',nosvg:true};
+  }
+  const removeH=rand(1,waterH-1);
+  const removeVol=l*b*removeH;
+  const remaining=l*b*waterH-removeVol;
+  return{svg:null,qText:'A tank is '+l+' cm long, '+b+' cm wide. The height of the water in the tank is '+waterH+' cm.\n'+removeVol+' cm³ of water is poured out.\nWhat is the volume of water remaining?',ans:remaining,unit:'cm³',nosvg:true};
+}
+
+function generateQ(){
+  answered=false;
+  document.getElementById('badge').textContent=CFG[level].badge;
+  const hintEl=document.getElementById('hint-box');
+  hintEl.textContent=CFG[level].hint;
+  hintEl.style.display=CFG[level].hint?'block':'none';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+  const q=level==='easy'?genEasy():level==='medium'?genMedium():genHard();
+  correctAnswer=q.ans;
+  document.getElementById('svg-wrap').innerHTML=(q.nosvg||!q.svg)?'':q.svg;
+  document.getElementById('question-text').textContent=q.qText;
+  const eq=document.getElementById('eq-row');
+  eq.innerHTML='<span class="eq-label">Answer =</span><input class="ans-input" id="ans-input" type="number" placeholder="?" autocomplete="off" inputmode="decimal"/><span class="eq-label">'+q.unit+'</span>';
+  document.getElementById('ans-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitAnswer();});
+  document.getElementById('check-btn').disabled=false;
+  setTimeout(()=>{const i=document.getElementById('ans-input');if(i)i.focus();},80);
+}
+
+function submitAnswer(){
+  if(answered)return;
+  const inp=document.getElementById('ans-input');if(!inp)return;
+  const raw=inp.value.trim();
+  if(raw===''){inp.style.borderColor='#fbbf24';setTimeout(()=>{inp.style.borderColor='';},600);return;}
+  const val=parseFloat(raw);if(isNaN(val))return;
+  answered=true;inp.disabled=true;document.getElementById('check-btn').disabled=true;
+  if(Math.abs(val-correctAnswer)<0.01){
+    inp.classList.add('ok');streak++;
+    let bonus=0,bonusMsg='';
+    if(streak>=5){bonus=10;bonusMsg=' · ⚡ Hot streak! +10';}
+    else if(streak>=3){bonus=5;bonusMsg=' · 🔥 +5 streak bonus!';}
+    if(Math.random()<0.1){bonus+=5;bonusMsg+=' · 🍀 Lucky +5!';}
+    pts+=10+bonus;if(pts>pb)pb=pts;qCount++;updateUI();
+    document.getElementById('feedback').className='feedback ok';
+    document.getElementById('feedback').textContent='✓ Correct! +10 pts'+bonusMsg;
+    launchConfetti();
+  } else {
+    inp.classList.add('wrong');streak=0;qCount++;updateUI();
+    document.getElementById('feedback').className='feedback wrong';
+    document.getElementById('feedback').textContent='Not quite — the answer is '+correctAnswer;
+  }
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,700);
+}
+
+function nextQ(){generateQ();}
+function updateUI(){
+  document.getElementById('pts-val').textContent=pts;document.getElementById('streak-val').textContent=streak;document.getElementById('pb-val').textContent=pb;
+  document.getElementById('q-count').textContent=qCount+' / '+TOTAL;document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';
+  const m=document.getElementById('milestone');
+  if(pts>=90)m.textContent='🏆 Brilliant!';else if(pts>=60)m.textContent='🌟 Next goal: 90 pts';else if(pts>=30)m.textContent='✅ Next goal: 60 pts';else m.textContent='🎯 First goal: 30 pts';
+}
+function showEndScreen(){
+  const em=pts>=90?'🏆':pts>=60?'🌟':'💪';
+  const msg=pts>=90?'Volume virtuoso!':pts>=60?'Great work!':'Keep practising!';
+  document.getElementById('game-card').innerHTML='<div style="text-align:center;padding:16px 0;"><div style="font-size:3rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.3rem;margin-top:8px;">'+msg+'</div><div style="font-size:.9rem;color:var(--soft);margin-top:6px;font-weight:700;">Score: '+pts+' pts · Best: '+pb+' pts</div><button onclick="resetGame()" style="margin-top:16px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:.9rem;padding:10px 28px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;">Play Again!</button></div>';
+  if(pts>=90)launchConfetti(180);
+}
+function resetGame(){
+  pts=0;streak=0;qCount=0;
+  document.getElementById('game-card').innerHTML='<span class="badge" id="badge"></span><div class="hint-box" id="hint-box"></div><div class="svg-wrap" id="svg-wrap"></div><div class="question-text" id="question-text"></div><div class="eq-row" id="eq-row"></div><button class="check-btn" id="check-btn" onclick="submitAnswer()">Check ✓</button><div class="feedback" id="feedback"></div><button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>';
+  updateUI();generateQ();
+}
+generateQ();
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#93c5fd','#34d399','#fbbf24','#f472b6','#a78bfa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*.07+.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiply Two Fractions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#0d9488;--accent-lt:#5eead4;--accent-bg:#ccfbf1;--bg:#f0fdfa;--soft:#6b7280;--text:#134e4a;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:12px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,4vw,2rem);color:var(--accent);}
+  header p{font-size:.78rem;color:var(--soft);font-weight:700;margin-top:2px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;padding:6px 16px;border:2.5px solid transparent;border-radius:50px;cursor:pointer;transition:all .16s;background:#fff;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:#16a34a;border-color:#4ade80;}.level-btn.medium{color:var(--accent);border-color:var(--accent-lt);}.level-btn.hard{color:#dc2626;border-color:#fca5a5;}
+  .level-btn.easy.active{background:#4ade80;color:#fff;}.level-btn.medium.active{background:var(--accent-lt);color:#fff;}.level-btn.hard.active{background:#fca5a5;color:#fff;}
+  .stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:10px;}
+  .stat-box{background:#fff;border-radius:14px;padding:7px 16px;text-align:center;min-width:78px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .stat-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .stat-val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .pts-box .stat-val{color:var(--accent);}.streak-box .stat-val{color:#f97316;}.pb-box .stat-val{color:#8b5cf6;}
+  .prog-wrap{width:100%;max-width:500px;margin-bottom:12px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:11px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent-lt),var(--accent));transition:width .4s;width:0%;}
+  .prog-info{display:flex;justify-content:space-between;margin-top:3px;font-size:.7rem;font-weight:800;color:var(--soft);}
+  .milestone{color:var(--accent);}
+  .game-card{background:#fff;border-radius:20px;padding:24px 20px;width:100%;max-width:500px;box-shadow:0 8px 32px rgba(13,148,136,.1);border-top:5px solid var(--accent-lt);display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .badge{font-size:.72rem;font-weight:800;background:var(--accent-bg);color:var(--accent);padding:4px 14px;border-radius:50px;}
+  .hint-box{background:var(--accent-bg);border-radius:12px;padding:8px 14px;font-size:.78rem;font-weight:700;color:var(--accent);text-align:center;width:100%;}
+  .question-area{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 0;}
+  .frac-display{display:inline-flex;flex-direction:column;align-items:center;font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,5vw,2rem);color:var(--text);}
+  .frac-display .num{border-bottom:3px solid var(--text);padding:0 8px;line-height:1.2;}
+  .frac-display .den{padding:0 8px;line-height:1.2;}
+  .op-sym{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,5vw,2.2rem);color:var(--soft);}
+  .q-label{font-size:.82rem;font-weight:800;color:var(--soft);text-align:center;}
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+  .opt-btn{display:flex;align-items:center;justify-content:center;padding:14px 8px;border:3px solid #e5e7eb;border-radius:16px;background:#f9fafb;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;min-height:64px;}
+  .opt-btn:hover{border-color:var(--accent-lt);background:var(--accent-bg);transform:translateY(-2px);}
+  .opt-btn.correct{border-color:#16a34a;background:#dcfce7;}
+  .opt-btn.wrong{border-color:#d97706;background:#fef3c7;}
+  .opt-btn.reveal{border-color:#16a34a;background:#dcfce7;}
+  .opt-btn:disabled{cursor:default;transform:none;}
+  .opt-frac{display:inline-flex;flex-direction:column;align-items:center;font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--text);}
+  .opt-frac .num{border-bottom:2.5px solid currentColor;padding:0 6px;line-height:1.3;}
+  .opt-frac .den{padding:0 6px;line-height:1.3;}
+  .feedback{width:100%;border-radius:14px;padding:11px 14px;font-size:.88rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:#dcfce7;color:#16a34a;display:block;}
+  .feedback.wrong{background:#fef3c7;color:#92400e;display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;background:#60a5fa;color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #2563eb;display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>✖️ Multiply Two Fractions</h1><p>Primary 5 · Multiply proper fractions</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="stats-row">
+  <div class="stat-box pts-box"><div class="stat-lbl">Points</div><div class="stat-val" id="pts-val">0</div></div>
+  <div class="stat-box streak-box"><div class="stat-lbl">Streak</div><div class="stat-val" id="streak-val">0</div></div>
+  <div class="stat-box pb-box"><div class="stat-lbl">Best</div><div class="stat-val" id="pb-val">0</div></div>
+</div>
+<div class="prog-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-info"><span id="q-count">0 / 10</span><span class="milestone" id="milestone">🎯 First goal: 30 pts</span></div>
+</div>
+<div class="game-card" id="game-card">
+  <span class="badge" id="badge"></span>
+  <div class="hint-box" id="hint-box"></div>
+  <div class="q-label">Find the answer in its simplest form.</div>
+  <div class="question-area" id="question-area"></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset</button>
+<script>
+const TOTAL=10;
+let pts=0,streak=0,pb=0,qCount=0,answered=false,level='easy';
+let correctN=1,correctD=1;
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function simplify(n,d){const g=gcd(Math.abs(n),d);return[n/g,d/g];}
+function fracLabel(n,d){return n+'/'+d;}
+
+const CFG={
+  easy:{badge:'⭐ Simple fractions — result simplifies easily',hint:'Multiply numerators together, denominators together, then simplify'},
+  medium:{badge:'🔥 Cross-cancellation helps',hint:'Try cancelling before multiplying to keep numbers small'},
+  hard:{badge:'💎 Larger denominators — simplify carefully',hint:'Find the GCF to simplify your answer to lowest terms'}
+};
+
+const EASY_PAIRS=[[1,2,1,3],[1,2,1,4],[1,3,1,4],[2,3,1,2],[3,4,1,2],[1,2,2,3],[2,5,1,2],[1,4,2,3],[3,5,1,3],[1,2,3,5],[2,3,3,4],[1,3,3,5]];
+const MED_PAIRS=[[2,3,3,4],[3,4,4,9],[5,6,3,5],[4,7,7,8],[3,8,4,9],[5,9,3,5],[2,5,5,6],[7,8,4,7],[3,7,7,9],[4,5,5,8]];
+const HARD_PAIRS=[[5,6,3,10],[7,9,3,7],[4,9,3,8],[5,12,6,7],[7,10,5,14],[8,9,3,8],[4,11,11,12],[5,8,4,15],[7,12,9,14],[3,11,11,15]];
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');resetGame();}
+
+function genQ(){
+  const pool=level==='easy'?EASY_PAIRS:level==='medium'?MED_PAIRS:HARD_PAIRS;
+  const p=pool[rand(0,pool.length-1)];
+  const[n1,d1,n2,d2]=p;
+  const[rn,rd]=simplify(n1*n2,d1*d2);
+  return{n1,d1,n2,d2,rn,rd};
+}
+
+function generateQ(){
+  answered=false;
+  const{n1,d1,n2,d2,rn,rd}=genQ();
+  correctN=rn;correctD=rd;
+  document.getElementById('badge').textContent=CFG[level].badge;
+  document.getElementById('hint-box').textContent=CFG[level].hint;
+  const qa=document.getElementById('question-area');
+  qa.innerHTML='<span class="frac-display"><span class="num">'+n1+'</span><span class="den">'+d1+'</span></span>'+
+    '<span class="op-sym">×</span>'+
+    '<span class="frac-display"><span class="num">'+n2+'</span><span class="den">'+d2+'</span></span>'+
+    '<span class="op-sym">=</span><span class="op-sym">?</span>';
+
+  const opts=new Set([fracLabel(rn,rd)]);
+  let tries=0;
+  while(opts.size<4&&tries<300){
+    tries++;
+    let wn=rn+(rand(0,1)?1:-1),wd=rd+(rand(0,1)?1:-1);
+    if(wn<=0||wd<=0||wn>=wd)continue;
+    const[sn,sd]=simplify(wn,wd);
+    const lbl=fracLabel(sn,sd);
+    if(!opts.has(lbl))opts.add(lbl);
+  }
+  const shuffled=[...opts].sort(()=>Math.random()-.5);
+  const optDiv=document.getElementById('options');optDiv.innerHTML='';
+  shuffled.forEach(lbl=>{
+    const [n,d]=lbl.split('/').map(Number);
+    const btn=document.createElement('button');btn.className='opt-btn';
+    btn.dataset.lbl=lbl;
+    btn.innerHTML='<span class="opt-frac"><span class="num">'+n+'</span><span class="den">'+d+'</span></span>';
+    btn.onclick=()=>selectOpt(btn,n,d);
+    optDiv.appendChild(btn);
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function selectOpt(btn,n,d){
+  if(answered)return;answered=true;
+  const correct=(n===correctN&&d===correctD);
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  if(correct){
+    btn.classList.add('correct');streak++;
+    let bonus=0,bonusMsg='';
+    if(streak>=5){bonus=10;bonusMsg=' · ⚡ Hot streak! +10';}
+    else if(streak>=3){bonus=5;bonusMsg=' · 🔥 +5 streak bonus!';}
+    if(Math.random()<0.1){bonus+=5;bonusMsg+=' · 🍀 Lucky +5!';}
+    pts+=10+bonus;if(pts>pb)pb=pts;qCount++;updateUI();
+    const fb=document.getElementById('feedback');fb.className='feedback ok';fb.textContent='✓ Correct! +10 pts'+bonusMsg;
+    launchConfetti();
+  } else {
+    btn.classList.add('wrong');streak=0;qCount++;updateUI();
+    document.querySelectorAll('.opt-btn').forEach(b=>{if(b.dataset.lbl===fracLabel(correctN,correctD))b.classList.add('reveal');});
+    const fb=document.getElementById('feedback');fb.className='feedback wrong';
+    fb.textContent='Not quite — the answer is '+correctN+'/'+correctD;
+  }
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,700);
+}
+
+function nextQ(){generateQ();}
+function updateUI(){
+  document.getElementById('pts-val').textContent=pts;document.getElementById('streak-val').textContent=streak;document.getElementById('pb-val').textContent=pb;
+  document.getElementById('q-count').textContent=qCount+' / '+TOTAL;document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';
+  const m=document.getElementById('milestone');
+  if(pts>=90)m.textContent='🏆 Brilliant!';else if(pts>=60)m.textContent='🌟 Next goal: 90 pts';else if(pts>=30)m.textContent='✅ Next goal: 60 pts';else m.textContent='🎯 First goal: 30 pts';
+}
+function showEndScreen(){
+  const em=pts>=90?'🏆':pts>=60?'🌟':'💪';
+  const msg=pts>=90?'Fraction master!':pts>=60?'Great work!':'Keep practising!';
+  document.getElementById('game-card').innerHTML='<div style="text-align:center;padding:16px 0;"><div style="font-size:3rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.3rem;margin-top:8px;">'+msg+'</div><div style="font-size:.9rem;color:var(--soft);margin-top:6px;font-weight:700;">Score: '+pts+' pts · Best: '+pb+' pts</div><button onclick="resetGame()" style="margin-top:16px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:.9rem;padding:10px 28px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;">Play Again!</button></div>';
+  if(pts>=90)launchConfetti(180);
+}
+function resetGame(){
+  pts=0;streak=0;qCount=0;
+  document.getElementById('game-card').innerHTML='<span class="badge" id="badge"></span><div class="hint-box" id="hint-box"></div><div class="q-label">Find the answer in its simplest form.</div><div class="question-area" id="question-area"></div><div class="options" id="options"></div><div class="feedback" id="feedback"></div><button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>';
+  updateUI();generateQ();
+}
+generateQ();
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#5eead4','#34d399','#fbbf24','#f472b6','#60a5fa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*.07+.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+</script>
+</body>
+</html>

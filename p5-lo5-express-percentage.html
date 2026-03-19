@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Express as Percentage</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#f97316;--accent-lt:#fdba74;--accent-bg:#fff7ed;--bg:#fff7ed;--soft:#6b7280;--text:#431407;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:12px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,4vw,2rem);color:var(--accent);}
+  header p{font-size:.78rem;color:var(--soft);font-weight:700;margin-top:2px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;padding:6px 16px;border:2.5px solid transparent;border-radius:50px;cursor:pointer;transition:all .16s;background:#fff;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:#16a34a;border-color:#4ade80;}.level-btn.medium{color:var(--accent);border-color:var(--accent-lt);}.level-btn.hard{color:#dc2626;border-color:#fca5a5;}
+  .level-btn.easy.active{background:#4ade80;color:#fff;}.level-btn.medium.active{background:var(--accent-lt);color:#fff;}.level-btn.hard.active{background:#fca5a5;color:#fff;}
+  .stats-row{display:flex;gap:10px;justify-content:center;margin-bottom:10px;}
+  .stat-box{background:#fff;border-radius:14px;padding:7px 16px;text-align:center;min-width:78px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .stat-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .stat-val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .pts-box .stat-val{color:var(--accent);}.streak-box .stat-val{color:#f97316;}.pb-box .stat-val{color:#8b5cf6;}
+  .prog-wrap{width:100%;max-width:500px;margin-bottom:12px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:11px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent-lt),var(--accent));transition:width .4s;width:0%;}
+  .prog-info{display:flex;justify-content:space-between;margin-top:3px;font-size:.7rem;font-weight:800;color:var(--soft);}
+  .milestone{color:var(--accent);}
+  .game-card{background:#fff;border-radius:20px;padding:24px 20px;width:100%;max-width:500px;box-shadow:0 8px 32px rgba(249,115,22,.1);border-top:5px solid var(--accent-lt);display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .badge{font-size:.72rem;font-weight:800;background:var(--accent-bg);color:var(--accent);padding:4px 14px;border-radius:50px;}
+  .hint-box{background:var(--accent-bg);border-radius:12px;padding:8px 14px;font-size:.78rem;font-weight:700;color:var(--accent);text-align:center;width:100%;}
+  .question-area{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 0;}
+  .frac-big{display:inline-flex;flex-direction:column;align-items:center;font-family:'Fredoka One',cursive;font-size:clamp(1.6rem,6vw,2.4rem);color:var(--text);}
+  .frac-big .num{border-bottom:3px solid var(--text);padding:0 10px;line-height:1.2;}
+  .frac-big .den{padding:0 10px;line-height:1.2;}
+  .op-sym{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,5vw,2rem);color:var(--soft);}
+  .pct-box{display:flex;align-items:center;gap:4px;}
+  .ans-input{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,5vw,2.2rem);width:90px;text-align:center;border:3px solid #d1d5db;border-radius:14px;padding:8px;outline:none;background:#f9fafb;color:var(--text);-moz-appearance:textfield;}
+  .ans-input::-webkit-outer-spin-button,.ans-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+  .ans-input:focus{border-color:var(--accent-lt);background:var(--accent-bg);}
+  .ans-input.ok{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+  .ans-input.wrong{border-color:#d97706;background:#fef3c7;color:#92400e;}
+  .pct-sym{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,5vw,2.2rem);color:var(--text);}
+  .context-card{background:var(--accent-bg);border-radius:14px;padding:12px 16px;font-size:.9rem;font-weight:700;color:var(--text);text-align:center;width:100%;border:2px solid #fed7aa;line-height:1.5;}
+  .check-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:11px 32px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #c2410c;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+  .check-btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 #c2410c;}
+  .check-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #c2410c;}
+  .check-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none;}
+  .feedback{width:100%;border-radius:14px;padding:11px 14px;font-size:.88rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:#dcfce7;color:#16a34a;display:block;}
+  .feedback.wrong{background:#fef3c7;color:#92400e;display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;background:#60a5fa;color:#fff;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #2563eb;display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>% Express as Percentage</h1><p>Primary 5 · Convert parts to percentages</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="stats-row">
+  <div class="stat-box pts-box"><div class="stat-lbl">Points</div><div class="stat-val" id="pts-val">0</div></div>
+  <div class="stat-box streak-box"><div class="stat-lbl">Streak</div><div class="stat-val" id="streak-val">0</div></div>
+  <div class="stat-box pb-box"><div class="stat-lbl">Best</div><div class="stat-val" id="pb-val">0</div></div>
+</div>
+<div class="prog-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-info"><span id="q-count">0 / 10</span><span class="milestone" id="milestone">🎯 First goal: 30 pts</span></div>
+</div>
+<div class="game-card" id="game-card">
+  <span class="badge" id="badge"></span>
+  <div class="hint-box" id="hint-box"></div>
+  <div class="context-card" id="context-card" style="display:none;"></div>
+  <div class="question-area" id="question-area"></div>
+  <button class="check-btn" id="check-btn" onclick="submitAnswer()">Check ✓</button>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset</button>
+<script>
+const TOTAL=10;
+let pts=0,streak=0,pb=0,qCount=0,answered=false,level='easy';
+let correctAnswer=0;
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+// easy: simple fractions with denominator 2,4,5,10,20,25,50,100
+// medium: word problem contexts, denominator factor of 100
+// hard: any fraction, answer may not be whole number
+
+const EASY_FRACS=[[1,2,50],[1,4,25],[3,4,75],[1,5,20],[2,5,40],[3,5,60],[4,5,80],[1,10,10],[3,10,30],[7,10,70],[1,20,5],[1,25,4],[1,50,2],[9,10,90],[1,100,1]];
+const MED_CONTEXTS=[
+  {tmpl:'Ali scored {n} out of {d} in a spelling test.',key:'score'},
+  {tmpl:'There are {n} red balls out of {d} balls in a bag.',key:'balls'},
+  {tmpl:'{n} out of {d} students in a class wear glasses.',key:'students'},
+  {tmpl:'A shop sold {n} out of {d} shirts on Monday.',key:'shirts'},
+  {tmpl:'{n} out of every {d} cars in a carpark are blue.',key:'cars'},
+];
+const MED_FRACS=[[3,20,15],[7,20,35],[9,20,45],[11,20,55],[13,20,65],[17,20,85],[7,25,28],[12,25,48],[18,25,72],[3,50,6],[21,50,42],[37,50,74]];
+
+const CFG={
+  easy:{badge:'⭐ Simple fractions → percentage',hint:'Percentage means "out of 100". Multiply or divide to get denominator 100.'},
+  medium:{badge:'🔥 Word problems with fractions',hint:'Part ÷ Whole × 100% = percentage. Find an equivalent fraction with denominator 100.'},
+  hard:{badge:'💎 Any fraction — round to nearest whole number',hint:'Divide numerator by denominator, then × 100. Round your answer to the nearest whole number.'}
+};
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');resetGame();}
+
+function genQ(){
+  let n,d,pct;
+  if(level==='easy'){
+    const f=EASY_FRACS[rand(0,EASY_FRACS.length-1)];[n,d,pct]=f;
+    return{type:'frac',n,d,pct,context:null};
+  }
+  if(level==='medium'){
+    const f=MED_FRACS[rand(0,MED_FRACS.length-1)];[n,d,pct]=f;
+    const ctx=MED_CONTEXTS[rand(0,MED_CONTEXTS.length-1)];
+    const context=ctx.tmpl.replace('{n}',n).replace('{d}',d);
+    return{type:'context',n,d,pct,context};
+  }
+  // hard: n/d where answer may be decimal
+  const dens=[3,6,7,8,9,11,12,15,16];
+  d=dens[rand(0,dens.length-1)];n=rand(1,d-1);
+  pct=Math.round(n/d*100);
+  return{type:'frac',n,d,pct,context:null};
+}
+
+function generateQ(){
+  answered=false;
+  const q=genQ();
+  correctAnswer=q.pct;
+  document.getElementById('badge').textContent=CFG[level].badge;
+  document.getElementById('hint-box').textContent=CFG[level].hint;
+  const ctx=document.getElementById('context-card');
+  if(q.context){ctx.textContent=q.context;ctx.style.display='block';}
+  else ctx.style.display='none';
+
+  const qa=document.getElementById('question-area');
+  qa.innerHTML='<span class="frac-big"><span class="num">'+q.n+'</span><span class="den">'+q.d+'</span></span>'+
+    '<span class="op-sym">=</span>'+
+    '<div class="pct-box"><input class="ans-input" id="ans-input" type="number" placeholder="?" autocomplete="off" inputmode="numeric"/><span class="pct-sym">%</span></div>';
+  document.getElementById('ans-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitAnswer();});
+  document.getElementById('check-btn').disabled=false;
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+  setTimeout(()=>{const i=document.getElementById('ans-input');if(i)i.focus();},80);
+}
+
+function submitAnswer(){
+  if(answered)return;
+  const inp=document.getElementById('ans-input');
+  if(!inp)return;
+  const raw=inp.value.trim();
+  if(raw===''){inp.style.borderColor='#fbbf24';setTimeout(()=>{inp.style.borderColor='';},600);return;}
+  const val=parseFloat(raw);
+  if(isNaN(val))return;
+  answered=true;inp.disabled=true;
+  document.getElementById('check-btn').disabled=true;
+  const correct=Math.abs(val-correctAnswer)<0.5;
+  if(correct){
+    inp.classList.add('ok');streak++;
+    let bonus=0,bonusMsg='';
+    if(streak>=5){bonus=10;bonusMsg=' · ⚡ Hot streak! +10';}
+    else if(streak>=3){bonus=5;bonusMsg=' · 🔥 +5 streak bonus!';}
+    if(Math.random()<0.1){bonus+=5;bonusMsg+=' · 🍀 Lucky +5!';}
+    pts+=10+bonus;if(pts>pb)pb=pts;qCount++;updateUI();
+    const fb=document.getElementById('feedback');fb.className='feedback ok';fb.textContent='✓ Correct! +10 pts'+bonusMsg;
+    launchConfetti();
+  } else {
+    inp.classList.add('wrong');streak=0;qCount++;updateUI();
+    const fb=document.getElementById('feedback');fb.className='feedback wrong';
+    fb.textContent='Not quite — the answer is '+correctAnswer+'%';
+  }
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,700);
+}
+
+function nextQ(){generateQ();}
+function updateUI(){
+  document.getElementById('pts-val').textContent=pts;document.getElementById('streak-val').textContent=streak;document.getElementById('pb-val').textContent=pb;
+  document.getElementById('q-count').textContent=qCount+' / '+TOTAL;document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';
+  const m=document.getElementById('milestone');
+  if(pts>=90)m.textContent='🏆 Brilliant!';else if(pts>=60)m.textContent='🌟 Next goal: 90 pts';else if(pts>=30)m.textContent='✅ Next goal: 60 pts';else m.textContent='🎯 First goal: 30 pts';
+}
+function showEndScreen(){
+  const em=pts>=90?'🏆':pts>=60?'🌟':'💪';
+  const msg=pts>=90?'Percentage pro!':pts>=60?'Great work!':'Keep practising!';
+  document.getElementById('game-card').innerHTML='<div style="text-align:center;padding:16px 0;"><div style="font-size:3rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.3rem;margin-top:8px;">'+msg+'</div><div style="font-size:.9rem;color:var(--soft);margin-top:6px;font-weight:700;">Score: '+pts+' pts · Best: '+pb+' pts</div><button onclick="resetGame()" style="margin-top:16px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:.9rem;padding:10px 28px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;">Play Again!</button></div>';
+  if(pts>=90)launchConfetti(180);
+}
+function resetGame(){
+  pts=0;streak=0;qCount=0;
+  document.getElementById('game-card').innerHTML='<span class="badge" id="badge"></span><div class="hint-box" id="hint-box"></div><div class="context-card" id="context-card" style="display:none;"></div><div class="question-area" id="question-area"></div><button class="check-btn" id="check-btn" onclick="submitAnswer()">Check ✓</button><div class="feedback" id="feedback"></div><button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>';
+  updateUI();generateQ();
+}
+generateQ();
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#fdba74','#34d399','#fbbf24','#f472b6','#60a5fa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*.07+.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+</script>
+</body>
+</html>
