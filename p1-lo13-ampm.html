@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AM or PM?</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#fffbeb;--card:#ffffff;--border:#fde68a;
+    --sun:#d97706;--sun-bg:#fef3c7;--moon:#6366f1;--moon-bg:#ede9fe;
+    --green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
+    --soft:#6b7280;--text:#1c1917;--blue-lt:#60a5fa;--blue:#2563eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:16px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:14px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,4vw,2.1rem);color:var(--sun);}
+  header p{font-size:0.82rem;color:var(--soft);margin-top:2px;font-weight:700;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:0.8rem;padding:7px 18px;
+    border:2.5px solid transparent;border-radius:50px;cursor:pointer;transition:all 0.16s;
+    background:var(--card);color:var(--soft);-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{border-color:#4ade80;} .level-btn.medium{border-color:var(--sun);}  .level-btn.hard{border-color:var(--moon);}
+  .level-btn.easy.active{background:#4ade80;color:#14532d;}
+  .level-btn.medium.active{background:var(--sun);color:#713f12;}
+  .level-btn.hard.active{background:var(--moon);color:#2e1065;}
+  .scoreboard{display:flex;gap:10px;margin-bottom:12px;}
+  .score-box{background:var(--card);border-radius:12px;padding:6px 18px;text-align:center;border:1px solid var(--border);min-width:76px;}
+  .score-box .lbl{font-size:0.63rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .score-box .val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .score-box.c .val{color:var(--green);}.score-box.w .val{color:var(--red);}.score-box.t .val{color:var(--blue-lt);}
+  .game-card{background:var(--card);border-radius:20px;padding:24px 20px;width:100%;max-width:480px;
+    border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:20px;}
+  /* Scene card */
+  .scene{width:100%;border-radius:16px;padding:20px 16px;text-align:center;transition:background 0.3s;}
+  .scene.am{background:linear-gradient(135deg,#fef3c7,#fde68a);}
+  .scene.pm{background:linear-gradient(135deg,#1e1b4b,#312e81);}
+  .scene-emoji{font-size:3.2rem;display:block;margin-bottom:10px;}
+  .scene-text{font-size:1.05rem;font-weight:800;line-height:1.5;color:#1c1917;}
+  .scene.pm .scene-text{color:#e0e7ff;}
+  .scene-time{font-family:'Fredoka One',cursive;font-size:1.5rem;margin-top:6px;color:#1e3a5f;}
+  .scene.pm .scene-time{color:#c7d2fe;}
+  .q-label{font-size:0.85rem;font-weight:800;color:var(--soft);}
+  /* AM/PM buttons */
+  .ampm-btns{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;}
+  .ampm-btn{font-family:'Fredoka One',cursive;font-size:1.8rem;padding:18px 8px;
+    border-radius:18px;border:3px solid transparent;cursor:pointer;transition:all 0.18s;
+    -webkit-tap-highlight-color:transparent;}
+  .ampm-btn.am-btn{background:#fef3c7;color:#92400e;border-color:#fde68a;}
+  .ampm-btn.pm-btn{background:#1e1b4b;color:#c7d2fe;border-color:#4f46e5;}
+  .ampm-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+  .ampm-btn.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .ampm-btn.wrong  {border-color:var(--red);  background:var(--red-bg); color:var(--red);}
+  .ampm-btn.reveal {border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .ampm-btn:disabled{cursor:default;transform:none;}
+  .feedback{width:100%;border-radius:14px;padding:10px 14px;font-size:0.9rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok {background:var(--green-bg);color:var(--green);display:block;}
+  .feedback.err{background:var(--red-bg);  color:var(--red);  display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;
+    background:var(--blue-lt);color:white;border:none;border-radius:14px;cursor:pointer;
+    box-shadow:0 4px 0 var(--blue);display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .progress-wrap{width:100%;max-width:480px;margin-top:6px;}
+  .prog-track{background:var(--border);border-radius:99px;height:9px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sun),var(--moon));transition:width 0.35s;width:0%;}
+  .prog-label{font-size:0.72rem;color:var(--soft);text-align:right;margin-top:3px;font-weight:800;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.76rem;
+    color:var(--soft);background:none;border:2px solid var(--border);padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>☀️🌙 AM or PM?</h1><p>Primary 1 · Time of Day</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div><div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div><div class="val" id="sc-t">0</div></div>
+</div>
+<div class="game-card">
+  <div class="q-label">Is this AM or PM?</div>
+  <div class="scene" id="scene">
+    <span class="scene-emoji" id="scene-emoji"></span>
+    <div class="scene-text" id="scene-text"></div>
+    <div class="scene-time" id="scene-time"></div>
+  </div>
+  <div class="ampm-btns">
+    <button class="ampm-btn am-btn" id="btn-am" onclick="selectOpt('am')">☀️ AM</button>
+    <button class="ampm-btn pm-btn" id="btn-pm" onclick="selectOpt('pm')">🌙 PM</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+<script>
+// easy:   clear cues (wake up, sleep, lunch) + obvious hours (7am, 9pm)
+// medium: moderate cues, wider hour range
+// hard:   tricky cues + edge hours (12am/pm boundary, 11:55pm etc)
+
+const SCENARIOS = {
+  easy: [
+    {am:true,  emoji:'🌅', text:'Waking up and eating breakfast', time:'7:00', label:'7:00 am'},
+    {am:true,  emoji:'🏫', text:'Arriving at school', time:'7:30', label:'7:30 am'},
+    {am:true,  emoji:'☀️', text:'Morning assembly at school', time:'8:00', label:'8:00 am'},
+    {am:false, emoji:'🌙', text:'Brushing teeth before bed', time:'9:00', label:'9:00 pm'},
+    {am:false, emoji:'😴', text:'Falling asleep in bed', time:'10:00', label:'10:00 pm'},
+    {am:false, emoji:'🍽️', text:'Eating dinner with family', time:'7:00', label:'7:00 pm'},
+    {am:true,  emoji:'🥛', text:'Drinking milk for breakfast', time:'6:30', label:'6:30 am'},
+    {am:false, emoji:'🌃', text:'The sky is dark and full of stars', time:'8:30', label:'8:30 pm'},
+    {am:true,  emoji:'🐓', text:'The rooster crows in the morning', time:'6:00', label:'6:00 am'},
+    {am:false, emoji:'📺', text:'Watching TV after dinner', time:'8:00', label:'8:00 pm'},
+  ],
+  medium: [
+    {am:false, emoji:'🍜', text:'Eating lunch at the school canteen', time:'12:30', label:'12:30 pm'},
+    {am:true,  emoji:'🧘', text:'Morning exercise in the park', time:'6:30', label:'6:30 am'},
+    {am:false, emoji:'🛒', text:'Shopping at the supermarket in the afternoon', time:'3:00', label:'3:00 pm'},
+    {am:false, emoji:'🌆', text:'Seeing the sunset over the city', time:'7:15', label:'7:15 pm'},
+    {am:true,  emoji:'📚', text:'First lesson of the school day', time:'8:30', label:'8:30 am'},
+    {am:false, emoji:'🎮', text:'Playing games after homework', time:'5:00', label:'5:00 pm'},
+    {am:true,  emoji:'🚌', text:'Taking the school bus in the morning', time:'7:00', label:'7:00 am'},
+    {am:false, emoji:'🎬', text:'Watching a movie at the cinema', time:'2:30', label:'2:30 pm'},
+    {am:true,  emoji:'🏃', text:'Morning run before school', time:'6:00', label:'6:00 am'},
+    {am:false, emoji:'🌜', text:'The moon rises and the night begins', time:'7:45', label:'7:45 pm'},
+  ],
+  hard: [
+    {am:false, emoji:'🕛', text:'It is midnight — the start of a new day', time:'12:00', label:'12:00 am'},
+    {am:false, emoji:'🌞', text:'Noon — the middle of the day', time:'12:00', label:'12:00 pm'},
+    {am:true,  emoji:'🌙', text:'Woke up very late at night feeling thirsty', time:'2:00', label:'2:00 am'},
+    {am:false, emoji:'🕚', text:'Almost time for bed but still 50 minutes away', time:'11:10', label:'11:10 pm'},
+    {am:true,  emoji:'📰', text:'The newspaper arrives before sunrise', time:'5:30', label:'5:30 am'},
+    {am:false, emoji:'🦉', text:'An owl hoots deep in the night', time:'11:55', label:'11:55 pm'},
+    {am:true,  emoji:'🌄', text:'The sky turns pink just after midnight passes 12', time:'12:05', label:'12:05 am'},
+    {am:false, emoji:'🍦', text:'Buying ice cream just after noon', time:'12:15', label:'12:15 pm'},
+    {am:true,  emoji:'🔔', text:'The school bell rings for the very first time today', time:'7:55', label:'7:55 am'},
+    {am:false, emoji:'🎆', text:'Fireworks light up the sky at a late-night show', time:'10:30', label:'10:30 pm'},
+  ]
+};
+
+let level='easy', sc=0, sw=0, st=0, qCount=0;
+const TOTAL=10; let correctAm=true, answered=false;
+let usedIdx=[];
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');resetGame();}
+
+function generateQ(){
+  answered=false;
+  const pool=SCENARIOS[level];
+  if(usedIdx.length>=pool.length)usedIdx=[];
+  let idx;
+  do{idx=Math.floor(Math.random()*pool.length);}while(usedIdx.includes(idx));
+  usedIdx.push(idx);
+  const s=pool[idx];
+  correctAm=s.am;
+
+  const scene=document.getElementById('scene');
+  scene.className='scene '+(s.am?'am':'pm');
+  document.getElementById('scene-emoji').textContent=s.emoji;
+  document.getElementById('scene-text').textContent=s.text;
+  document.getElementById('scene-time').textContent=s.time;
+
+  ['btn-am','btn-pm'].forEach(id=>{
+    const b=document.getElementById(id);
+    b.disabled=false;b.className='ampm-btn '+(id==='btn-am'?'am-btn':'pm-btn');
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function selectOpt(val){
+  if(answered)return;answered=true;st++;qCount++;
+  const correct=(val==='am')===correctAm;
+  const btnId=val==='am'?'btn-am':'btn-pm';
+  const otherBtnId=val==='am'?'btn-pm':'btn-am';
+  if(correct){sc++;document.getElementById(btnId).classList.add('correct');launchConfetti();}
+  else{sw++;document.getElementById(btnId).classList.add('wrong');document.getElementById(otherBtnId).classList.add('reveal');}
+  document.getElementById('btn-am').disabled=true;document.getElementById('btn-pm').disabled=true;
+  const fb=document.getElementById('feedback');
+  fb.className='feedback '+(correct?'ok':'err');
+  fb.textContent=correct?'🎉 Correct! That is '+(correctAm?'AM':'PM'):'❌ That is '+(correctAm?'AM':'PM');
+  updateScore();updateProgress();
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,800);
+}
+function nextQ(){generateQ();}
+function updateScore(){document.getElementById('sc-c').textContent=sc;document.getElementById('sc-w').textContent=sw;document.getElementById('sc-t').textContent=st;}
+function updateProgress(){document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';document.getElementById('prog-label').textContent=qCount+' / '+TOTAL+' questions';}
+function showEndScreen(){
+  const pct=Math.round(sc/TOTAL*100);
+  const msg=pct===100?'You know your AM from PM!':pct>=70?'Great work!':'Keep practising!';
+  const em=pct===100?'🏆':pct>=70?'🌟':'💪';
+  document.getElementById('scene').innerHTML='<div style="text-align:center;padding:12px 0;"><div style="font-size:2.8rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.2rem;margin-top:8px;color:var(--text);">'+msg+'</div><div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: '+sc+' / '+TOTAL+' ('+pct+'%)</div></div>';
+  document.getElementById('scene').className='scene';
+  document.getElementById('btn-am').style.display='none';
+  document.getElementById('btn-pm').style.display='none';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+  const playBtn=document.createElement('button');
+  playBtn.textContent='Play Again!';
+  playBtn.style.cssText='margin-top:4px;font-family:Nunito,sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--sun);color:#713f12;border:none;border-radius:12px;cursor:pointer;';
+  playBtn.onclick=resetGame;
+  document.getElementById('scene').appendChild(playBtn);
+  if(pct===100)launchConfetti(180);
+}
+function resetGame(){
+  sc=sw=st=qCount=0;usedIdx=[];
+  document.getElementById('scene').innerHTML='<span class="scene-emoji" id="scene-emoji"></span><div class="scene-text" id="scene-text"></div><div class="scene-time" id="scene-time"></div>';
+  ['btn-am','btn-pm'].forEach(id=>document.getElementById(id).style.display='');
+  updateScore();updateProgress();generateQ();
+}
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#fbbf24','#818cf8','#4ade80','#f472b6','#60a5fa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*0.07+0.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+generateQ();
+</script>
+</body>
+</html>

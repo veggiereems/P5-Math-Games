@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tens & Ones – Place Value</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #fffbf0;
+    --orange:    #f97316;
+    --orange-dk: #c2410c;
+    --yellow:    #fbbf24;
+    --yellow-dk: #d97706;
+    --teal:      #14b8a6;
+    --teal-dk:   #0f766e;
+    --red:       #ef4444;
+    --red-dk:    #b91c1c;
+    --text:      #1c1917;
+    --soft:      #78716c;
+    --card-bg:   #ffffff;
+    --tens-col:  #fb923c;
+    --ones-col:  #fcd34d;
+    --radius:    18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(251,191,36,0.18) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(249,115,22,0.13) 0%, transparent 40%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px 32px;
+    color: var(--text);
+  }
+
+  /* ── Header ── */
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 800;
+    color: var(--orange-dk);
+    line-height: 1.1;
+  }
+  header p { font-size: 0.82rem; color: var(--soft); margin-top: 2px; font-weight: 600; }
+
+  /* ── Level Buttons ── */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+  .level-btn {
+    font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 0.82rem;
+    padding: 7px 18px; border: 2.5px solid transparent; border-radius: 50px;
+    cursor: pointer; transition: all 0.16s; background: white;
+  }
+  .level-btn.easy   { color: var(--teal-dk);   border-color: var(--teal); }
+  .level-btn.medium { color: var(--orange-dk); border-color: var(--orange); }
+  .level-btn.hard   { color: var(--red-dk);    border-color: var(--red); }
+  .level-btn.easy.active   { background: var(--teal);   color: white; }
+  .level-btn.medium.active { background: var(--orange); color: white; }
+  .level-btn.hard.active   { background: var(--red);    color: white; }
+  .level-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 12px; }
+  .score-box {
+    background: white; border-radius: 12px; padding: 6px 18px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 76px;
+  }
+  .score-box .lbl { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); }
+  .score-box .val { font-family: 'Baloo 2', cursive; font-size: 1.5rem; line-height: 1.1; font-weight: 800; }
+  .score-box.c .val { color: var(--teal-dk); }
+  .score-box.w .val { color: var(--red-dk); }
+  .score-box.t .val { color: var(--orange-dk); }
+
+  /* ── Game Card ── */
+  .game-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    width: 100%; max-width: 580px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.07);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    border-top: 5px solid var(--orange);
+  }
+
+  /* ── Question prompt ── */
+  .prompt {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .prompt .highlight {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--orange-dk);
+    padding: 2px 10px;
+    border-radius: 8px;
+    font-size: 1.5em;
+    line-height: 1.2;
+  }
+
+  /* ── Base-10 Blocks Display ── */
+  .blocks-area {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 80px;
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+
+  .block-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .block-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--soft);
+  }
+  .block-units { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; max-width: 120px; }
+
+  /* Tens rod = tall rectangle */
+  .tens-rod {
+    width: 18px; height: 60px;
+    background: linear-gradient(180deg, var(--tens-col), #ea580c);
+    border-radius: 4px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+    animation: popIn 0.2s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .tens-rod::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 5px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px 3px 0 0;
+  }
+
+  /* Ones cube = small square */
+  .ones-cube {
+    width: 18px; height: 18px;
+    background: linear-gradient(135deg, var(--ones-col), #f59e0b);
+    border-radius: 3px;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+    animation: popIn 0.2s ease both;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Answer area ── */
+  .answer-section { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+
+  /* For easy mode: single number input */
+  .single-input-row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+
+  /* For medium/hard: labelled inputs */
+  .dual-inputs { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .input-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .input-group .input-lbl {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .input-group.tens-grp .input-lbl { color: var(--orange-dk); }
+  .input-group.ones-grp .input-lbl { color: var(--yellow-dk); }
+
+  .ans-input {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.5rem; font-weight: 800;
+    width: 80px; text-align: center;
+    border: 2.5px solid #e5e7eb;
+    border-radius: 12px; padding: 6px 8px;
+    outline: none; transition: border-color 0.16s;
+    color: var(--text);
+    -moz-appearance: textfield;
+  }
+  .ans-input::-webkit-outer-spin-button,
+  .ans-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .ans-input:focus { border-color: var(--orange); }
+  .ans-input.correct-inp { border-color: var(--teal);  background: #f0fdfa; }
+  .ans-input.wrong-inp   { border-color: var(--red);   background: #fef2f2; }
+
+  .check-btn {
+    font-family: 'Baloo 2', cursive; font-weight: 700;
+    font-size: 1rem; padding: 9px 26px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 12px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--orange-dk);
+  }
+  .check-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--orange-dk); }
+  .check-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--orange-dk); }
+  .check-btn:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
+
+  /* ── Feedback ── */
+  .feedback {
+    width: 100%; border-radius: 12px; padding: 11px 14px;
+    font-size: 0.95rem; font-weight: 700; text-align: center;
+    display: none; animation: slideDown 0.18s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.ok  { background: #ccfbf1; color: #0f766e; display: block; }
+  .feedback.err { background: #fee2e2; color: #991b1b; display: block; }
+
+  /* ── Next btn ── */
+  .next-btn {
+    font-family: 'Baloo 2', cursive; font-weight: 700;
+    font-size: 1rem; padding: 9px 30px;
+    background: var(--teal); color: white;
+    border: none; border-radius: 12px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--teal-dk); display: none;
+  }
+  .next-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--teal-dk); }
+  .next-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--teal-dk); }
+  .next-btn.show { display: block; }
+
+  /* ── Progress ── */
+  .progress-wrap { width: 100%; max-width: 580px; margin-top: 6px; }
+  .prog-track { background: #e5e7eb; border-radius: 99px; height: 9px; overflow: hidden; }
+  .prog-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--orange), var(--yellow));
+    transition: width 0.35s ease; width: 0%;
+  }
+  .prog-label { font-size: 0.73rem; color: var(--soft); text-align: right; margin-top: 3px; font-weight: 700; }
+
+  /* ── Reset ── */
+  .reset-btn {
+    margin-top: 8px; font-family: 'Quicksand', sans-serif; font-weight: 700;
+    font-size: 0.78rem; color: var(--soft); background: none;
+    border: 2px solid #e5e7eb; padding: 5px 14px;
+    border-radius: 50px; cursor: pointer; transition: all 0.16s;
+  }
+  .reset-btn:hover { border-color: var(--soft); color: var(--text); }
+
+  #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <h1>🧱 Tens & Ones</h1>
+  <p>Primary 1 · Place Value · Tens and Ones</p>
+</header>
+
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium"      onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard"        onclick="setLevel('hard')">💎 Hard</button>
+</div>
+
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div>  <div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div>  <div class="val" id="sc-t">0</div></div>
+</div>
+
+<div class="game-card" id="game-card">
+  <div class="prompt" id="prompt"></div>
+  <div class="blocks-area" id="blocks-area"></div>
+  <div class="answer-section" id="answer-section"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+
+<script>
+// ── State ─────────────────────────────────────────────
+let level = 'easy';
+let sc = 0, sw = 0, st = 0, qCount = 0;
+const TOTAL = 10;
+let answered = false;
+let correctTens, correctOnes, correctNum, questionType;
+
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+// ── Level config ───────────────────────────────────────
+// easy:   show blocks → type the number  (10–50, always a clean number)
+// medium: show a number → type tens OR ones digit
+// hard:   show a number → type the VALUE of tens digit (e.g. 47 → 40)
+function setLevel(l) {
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.level-btn.' + l).classList.add('active');
+  resetGame();
+}
+
+// ── Generate question ──────────────────────────────────
+function generateQ() {
+  answered = false;
+
+  if (level === 'easy') {
+    // Show blocks, ask: what number?
+    correctTens = rand(1, 5);
+    correctOnes = rand(0, 9);
+    correctNum  = correctTens * 10 + correctOnes;
+    questionType = 'read_blocks';
+    renderPrompt('What number is shown by the blocks?');
+    renderBlocks(correctTens, correctOnes);
+    renderSingleInput('number', 10, 59);
+
+  } else if (level === 'medium') {
+    // Show number, ask tens digit OR ones digit
+    correctNum  = rand(11, 99);
+    correctTens = Math.floor(correctNum / 10);
+    correctOnes = correctNum % 10;
+    questionType = Math.random() < 0.5 ? 'ask_tens_digit' : 'ask_ones_digit';
+    if (questionType === 'ask_tens_digit') {
+      renderPrompt('How many <b>tens</b> are in <span class="highlight">' + correctNum + '</span>?');
+      renderNumberBlocks(correctNum);
+      renderSingleInput('tens digit', 1, 9);
+    } else {
+      renderPrompt('How many <b>ones</b> are in <span class="highlight">' + correctNum + '</span>?');
+      renderNumberBlocks(correctNum);
+      renderSingleInput('ones digit', 0, 9);
+    }
+
+  } else {
+    // Hard: show number, ask VALUE of tens digit (e.g. 47 → 40)
+    correctNum  = rand(11, 99);
+    correctTens = Math.floor(correctNum / 10);
+    correctOnes = correctNum % 10;
+    questionType = Math.random() < 0.5 ? 'ask_tens_value' : 'ask_ones_value';
+    if (questionType === 'ask_tens_value') {
+      renderPrompt('What is the <b>value</b> of the digit in the <b>tens place</b> in <span class="highlight">' + correctNum + '</span>?');
+      renderNumberBlocks(correctNum);
+      renderSingleInput('value', 10, 90);
+    } else {
+      renderPrompt('What is the <b>value</b> of the digit in the <b>ones place</b> in <span class="highlight">' + correctNum + '</span>?');
+      renderNumberBlocks(correctNum);
+      renderSingleInput('value', 0, 9);
+    }
+  }
+
+  clearFeedback();
+  document.getElementById('next-btn').classList.remove('show');
+  focusFirst();
+}
+
+// ── Render helpers ─────────────────────────────────────
+function renderPrompt(html) {
+  document.getElementById('prompt').innerHTML = html;
+}
+
+function renderBlocks(tens, ones) {
+  const area = document.getElementById('blocks-area');
+  area.innerHTML = '';
+
+  if (tens > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'block-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'block-label';
+    lbl.textContent = 'Tens';
+    const units = document.createElement('div');
+    units.className = 'block-units';
+    units.style.display = 'flex';
+    units.style.gap = '4px';
+    for (let i = 0; i < tens; i++) {
+      const rod = document.createElement('div');
+      rod.className = 'tens-rod';
+      rod.style.animationDelay = (i * 60) + 'ms';
+      units.appendChild(rod);
+    }
+    grp.appendChild(lbl);
+    grp.appendChild(units);
+    area.appendChild(grp);
+  }
+
+  if (ones > 0) {
+    const grp = document.createElement('div');
+    grp.className = 'block-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'block-label';
+    lbl.textContent = 'Ones';
+    const units = document.createElement('div');
+    units.className = 'block-units';
+    for (let i = 0; i < ones; i++) {
+      const cube = document.createElement('div');
+      cube.className = 'ones-cube';
+      cube.style.animationDelay = (i * 40) + 'ms';
+      units.appendChild(cube);
+    }
+    grp.appendChild(lbl);
+    grp.appendChild(units);
+    area.appendChild(grp);
+  }
+}
+
+function renderNumberBlocks(num) {
+  // Show blocks matching the number but smaller (visual aid)
+  renderBlocks(Math.floor(num / 10), num % 10);
+}
+
+function renderSingleInput(placeholder, min, max) {
+  const sec = document.getElementById('answer-section');
+  sec.innerHTML =
+    '<div class="single-input-row">' +
+    '<input class="ans-input" id="inp1" type="number" min="' + min + '" max="' + max + '" placeholder="?" autocomplete="off"/>' +
+    '<button class="check-btn" id="check-btn" onclick="checkAnswer()">Check!</button>' +
+    '</div>';
+}
+
+function clearFeedback() {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+}
+
+function focusFirst() {
+  setTimeout(() => {
+    const inp = document.getElementById('inp1');
+    if (inp) inp.focus();
+  }, 80);
+}
+
+// ── Check answer ───────────────────────────────────────
+function checkAnswer() {
+  if (answered) return;
+
+  const inp = document.getElementById('inp1');
+  const val = parseInt(inp.value, 10);
+
+  if (isNaN(val) || inp.value.trim() === '') {
+    inp.style.borderColor = '#fbbf24';
+    setTimeout(() => { inp.style.borderColor = ''; }, 700);
+    return;
+  }
+
+  answered = true;
+  st++; qCount++;
+  inp.disabled = true;
+  document.getElementById('check-btn').disabled = true;
+
+  let correct = false;
+  let correctVal, msg;
+
+  if (questionType === 'read_blocks') {
+    correct = val === correctNum;
+    correctVal = correctNum;
+    msg = correct
+      ? '🎉 Correct! The blocks show ' + correctNum + ' (' + correctTens + ' tens and ' + correctOnes + ' ones).'
+      : '❌ Not quite! ' + correctTens + ' tens and ' + correctOnes + ' ones = ' + correctNum + '.';
+
+  } else if (questionType === 'ask_tens_digit') {
+    correct = val === correctTens;
+    correctVal = correctTens;
+    msg = correct
+      ? '🎉 Correct! ' + correctNum + ' has ' + correctTens + ' tens.'
+      : '❌ Not quite! ' + correctNum + ' has ' + correctTens + ' tens (the first digit).';
+
+  } else if (questionType === 'ask_ones_digit') {
+    correct = val === correctOnes;
+    correctVal = correctOnes;
+    msg = correct
+      ? '🎉 Correct! ' + correctNum + ' has ' + correctOnes + ' ones.'
+      : '❌ Not quite! ' + correctNum + ' has ' + correctOnes + ' ones (the last digit).';
+
+  } else if (questionType === 'ask_tens_value') {
+    const expected = correctTens * 10;
+    correct = val === expected;
+    correctVal = expected;
+    msg = correct
+      ? '🎉 Correct! The digit in the tens place in ' + correctNum + ' is ' + correctTens + ', so its value is ' + expected + '.'
+      : '❌ Not quite! The digit in the tens place is ' + correctTens + ', so its value is ' + correctTens + ' × 10 = ' + expected + '.';
+
+  } else {
+    // ask_ones_value
+    correct = val === correctOnes;
+    correctVal = correctOnes;
+    msg = correct
+      ? '🎉 Correct! The digit in the ones place in ' + correctNum + ' is ' + correctOnes + ', so its value is ' + correctOnes + '.'
+      : '❌ Not quite! The digit in the ones place is ' + correctOnes + ', so its value is just ' + correctOnes + '.';
+  }
+
+  if (correct) { sc++; inp.className = 'ans-input correct-inp'; launchConfetti(); }
+  else         { sw++; inp.className = 'ans-input wrong-inp'; }
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + (correct ? 'ok' : 'err');
+  fb.textContent = msg;
+
+  updateScore();
+  updateProgress();
+
+  if (qCount < TOTAL) {
+    document.getElementById('next-btn').classList.add('show');
+  } else {
+    showEndScreen();
+  }
+}
+
+// ── Next ───────────────────────────────────────────────
+function nextQ() { generateQ(); }
+
+// ── Score & Progress ───────────────────────────────────
+function updateScore() {
+  document.getElementById('sc-c').textContent = sc;
+  document.getElementById('sc-w').textContent = sw;
+  document.getElementById('sc-t').textContent = st;
+}
+function updateProgress() {
+  document.getElementById('prog-fill').style.width = (qCount / TOTAL * 100) + '%';
+  document.getElementById('prog-label').textContent = qCount + ' / ' + TOTAL + ' questions';
+}
+
+// ── End screen ─────────────────────────────────────────
+function showEndScreen() {
+  const pct = Math.round((sc / TOTAL) * 100);
+  let msg, em;
+  if (pct === 100)    { msg = "Perfect! You're a place value pro!"; em = '🏆'; }
+  else if (pct >= 70) { msg = "Great work! Keep it up!"; em = '🌟'; }
+  else                { msg = "Good try! Let's practise more!"; em = '💪'; }
+
+  document.getElementById('blocks-area').innerHTML =
+    '<div style="width:100%;text-align:center;padding:16px 0;">' +
+    '<div style="font-size:2.8rem;">' + em + '</div>' +
+    '<div style="font-family:\'Baloo 2\',cursive;font-size:1.3rem;font-weight:800;color:#1c1917;margin-top:8px;">' + msg + '</div>' +
+    '<div style="font-size:0.95rem;color:#78716c;margin-top:5px;">Score: ' + sc + ' / ' + TOTAL + ' (' + pct + '%)</div>' +
+    '<button onclick="resetGame()" style="margin-top:14px;font-family:\'Baloo 2\',cursive;font-weight:700;font-size:0.95rem;padding:9px 26px;background:#f97316;color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 #c2410c;">Play Again!</button>' +
+    '</div>';
+
+  document.getElementById('answer-section').innerHTML = '';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  if (pct === 100) launchConfetti(180);
+}
+
+// ── Reset ──────────────────────────────────────────────
+function resetGame() {
+  sc = sw = st = qCount = 0;
+  updateScore(); updateProgress();
+  generateQ();
+}
+
+// ── Keyboard ───────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (!answered) checkAnswer();
+    else if (document.getElementById('next-btn').classList.contains('show')) nextQ();
+  }
+});
+
+// ── Confetti ───────────────────────────────────────────
+function launchConfetti(count) {
+  count = count || 55;
+  const cv = document.getElementById('confetti-canvas');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const cols = ['#f97316','#fbbf24','#14b8a6','#ef4444','#a78bfa','#34d399'];
+  const ps = Array.from({length: count}, function() {
+    return {
+      x: Math.random() * cv.width, y: -10,
+      r: Math.random() * 5 + 3,
+      color: cols[Math.floor(Math.random() * cols.length)],
+      ta: 0, tai: Math.random() * 0.07 + 0.04,
+      vx: Math.random() * 2 - 1, vy: Math.random() * 3 + 2
+    };
+  });
+  let ttl = 110;
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(function(p) {
+      p.ta += p.tai; p.y += p.vy; p.x += p.vx;
+      ctx.beginPath();
+      ctx.lineWidth = p.r / 2; ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + Math.sin(p.ta)*12 + p.r/4, p.y);
+      ctx.lineTo(p.x + Math.sin(p.ta)*12, p.y + Math.sin(p.ta)*12 + p.r/4);
+      ctx.stroke();
+    });
+    ttl--;
+    if (ttl > 0) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  }
+  draw();
+}
+
+// ── Init ───────────────────────────────────────────────
+generateQ();
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Count Money in Cents</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fefce8; --gold: #ca8a04; --gold-lt: #fde047; --gold-bg: #fef9c3;
+    --green: #16a34a; --green-bg: #dcfce7; --red: #dc2626; --red-bg: #fee2e2;
+    --blue: #2563eb; --blue-lt: #60a5fa; --soft: #6b7280; --text: #713f12; --card: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; padding: 16px 12px 32px; color: var(--text); }
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(1.5rem,4vw,2.1rem); color: var(--gold); }
+  header p { font-size: 0.82rem; color: var(--soft); margin-top: 2px; font-weight: 700; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+  .level-btn { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.8rem;
+    padding: 7px 18px; border: 2.5px solid transparent; border-radius: 50px;
+    cursor: pointer; transition: all 0.16s; background: white; -webkit-tap-highlight-color: transparent; }
+  .level-btn.easy   { color: var(--green); border-color: #4ade80; }
+  .level-btn.medium { color: var(--gold);  border-color: var(--gold-lt); }
+  .level-btn.hard   { color: var(--red);   border-color: #f87171; }
+  .level-btn.easy.active   { background: #4ade80; color: white; }
+  .level-btn.medium.active { background: var(--gold-lt); color: var(--gold); }
+  .level-btn.hard.active   { background: #f87171; color: white; }
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 12px; }
+  .score-box { background: white; border-radius: 12px; padding: 6px 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 76px; }
+  .score-box .lbl { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); }
+  .score-box .val { font-family: 'Fredoka One', cursive; font-size: 1.6rem; line-height: 1.1; }
+  .score-box.c .val { color: var(--green); } .score-box.w .val { color: var(--red); } .score-box.t .val { color: var(--blue); }
+  .game-card { background: var(--card); border-radius: 20px; padding: 24px 20px;
+    width: 100%; max-width: 500px; box-shadow: 0 8px 32px rgba(202,138,4,0.12);
+    border-top: 5px solid var(--gold-lt); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .question-label { font-size: 0.82rem; font-weight: 800; color: var(--soft); text-align: center; }
+  /* Coin display */
+  .coins-area { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 8px; }
+  .coin {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive; font-weight: 900;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.4);
+    animation: coinPop 0.25s ease both; flex-shrink: 0;
+  }
+  @keyframes coinPop { from { transform: scale(0.5) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+  .coin .val  { font-size: 0.95rem; line-height: 1; }
+  .coin .unit { font-size: 0.55rem; letter-spacing: 0.5px; opacity: 0.85; }
+  .coin.c5   { background: radial-gradient(circle at 35% 35%, #fde68a, #ca8a04); color: #713f12; }
+  .coin.c10  { background: radial-gradient(circle at 35% 35%, #d1d5db, #6b7280); color: #1f2937; }
+  .coin.c20  { background: radial-gradient(circle at 35% 35%, #fde68a, #b45309); color: #fff; }
+  .coin.c50  { background: radial-gradient(circle at 35% 35%, #fcd34d, #92400e); color: #fff; }
+  /* MCQ options */
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .opt-btn { font-family: 'Fredoka One', cursive; font-size: 1.3rem;
+    padding: 14px 8px; border: 3px solid #e5e7eb; border-radius: 16px;
+    background: #f9fafb; cursor: pointer; transition: all 0.15s; color: var(--text);
+    -webkit-tap-highlight-color: transparent; }
+  .opt-btn:hover { border-color: var(--gold-lt); background: var(--gold-bg); transform: translateY(-2px); }
+  .opt-btn.correct { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+  .opt-btn.wrong   { border-color: var(--red);   background: var(--red-bg);   color: var(--red); }
+  .opt-btn.reveal  { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+  .opt-btn:disabled { cursor: default; transform: none; }
+  .feedback { width: 100%; border-radius: 14px; padding: 10px 14px;
+    font-size: 0.9rem; font-weight: 800; text-align: center; display: none; animation: sd 0.18s ease; }
+  @keyframes sd { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .feedback.ok  { background: var(--green-bg); color: var(--green); display: block; }
+  .feedback.err { background: var(--red-bg);   color: var(--red);   display: block; }
+  .next-btn { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    padding: 10px 30px; background: var(--blue-lt); color: white;
+    border: none; border-radius: 14px; cursor: pointer; transition: all 0.16s;
+    box-shadow: 0 4px 0 var(--blue); display: none; -webkit-tap-highlight-color: transparent; }
+  .next-btn.show { display: block; }
+  .progress-wrap { width: 100%; max-width: 500px; margin-top: 6px; }
+  .prog-track { background: #e5e7eb; border-radius: 99px; height: 9px; overflow: hidden; }
+  .prog-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold-lt), #fbbf24); transition: width 0.35s; width: 0%; }
+  .prog-label { font-size: 0.72rem; color: var(--soft); text-align: right; margin-top: 3px; font-weight: 800; }
+  .reset-btn { margin-top: 8px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    font-size: 0.76rem; color: var(--soft); background: none;
+    border: 2px solid #e5e7eb; padding: 5px 14px; border-radius: 50px; cursor: pointer; }
+  #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>🪙 Count Money in Cents</h1><p>Primary 1 · Up to $1 (100¢)</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div><div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div><div class="val" id="sc-t">0</div></div>
+</div>
+<div class="game-card">
+  <div class="question-label" id="q-label">How much money is shown?</div>
+  <div class="coins-area" id="coins-area"></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+<script>
+// easy:   2-3 same-denomination coins (5¢, 10¢, 20¢)
+// medium: 2-4 mixed coins, total ≤ 50¢
+// hard:   3-5 mixed coins, total up to 100¢
+
+const COINS = [
+  { val: 5,  cls: 'c5',  label: '5¢' },
+  { val: 10, cls: 'c10', label: '10¢' },
+  { val: 20, cls: 'c20', label: '20¢' },
+  { val: 50, cls: 'c50', label: '50¢' },
+];
+
+let level = 'easy', sc = 0, sw = 0, st = 0, qCount = 0;
+const TOTAL = 10;
+let correctAnswer = 0, answered = false;
+const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+function setLevel(l) {
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.level-btn.'+l).classList.add('active');
+  resetGame();
+}
+
+function generateCoins() {
+  let coins = [], total = 0;
+  if (level === 'easy') {
+    const c = COINS[rand(0,2)];
+    const n = rand(2,3);
+    for (let i=0;i<n;i++) coins.push(c);
+    total = c.val * n;
+  } else if (level === 'medium') {
+    let attempts = 0;
+    do {
+      coins = []; total = 0;
+      const n = rand(2,4);
+      for (let i=0;i<n;i++) {
+        const c = COINS[rand(0,2)];
+        coins.push(c); total += c.val;
+      }
+      attempts++;
+    } while ((total > 50 || total < 10) && attempts < 200);
+  } else {
+    let attempts = 0;
+    do {
+      coins = []; total = 0;
+      const n = rand(3,5);
+      for (let i=0;i<n;i++) {
+        const c = COINS[rand(0,3)];
+        coins.push(c); total += c.val;
+      }
+      attempts++;
+    } while ((total > 100 || total < 20) && attempts < 200);
+  }
+  return { coins, total };
+}
+
+function generateQ() {
+  answered = false;
+  const { coins, total } = generateCoins();
+  correctAnswer = total;
+
+  // Render coins
+  const area = document.getElementById('coins-area');
+  area.innerHTML = '';
+  coins.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'coin ' + c.cls;
+    el.style.animationDelay = (i * 60) + 'ms';
+    el.innerHTML = '<span class="val">' + c.label + '</span>';
+    area.appendChild(el);
+  });
+
+  // Generate 3 wrong options
+  const opts = new Set([correctAnswer]);
+  while (opts.size < 4) {
+    let w = correctAnswer + rand(-3,3) * 5;
+    if (w !== correctAnswer && w > 0 && w <= 100) opts.add(w);
+  }
+  const shuffled = [...opts].sort(() => Math.random()-0.5);
+
+  const optDiv = document.getElementById('options');
+  optDiv.innerHTML = '';
+  shuffled.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn'; btn.textContent = v + '¢';
+    btn.onclick = () => selectOpt(btn, v);
+    optDiv.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function selectOpt(btn, val) {
+  if (answered) return;
+  answered = true; st++; qCount++;
+  const correct = val === correctAnswer;
+  if (correct) { sc++; btn.classList.add('correct'); launchConfetti(); }
+  else {
+    sw++; btn.classList.add('wrong');
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      if (parseInt(b.textContent) === correctAnswer) b.classList.add('reveal');
+    });
+  }
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + (correct ? 'ok' : 'err');
+  fb.textContent = correct ? '🎉 Correct! ' + correctAnswer + '¢' : '❌ The total is ' + correctAnswer + '¢';
+  updateScore(); updateProgress();
+  if (qCount < TOTAL) document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen, 800);
+}
+
+function nextQ() { generateQ(); }
+function updateScore() {
+  document.getElementById('sc-c').textContent = sc;
+  document.getElementById('sc-w').textContent = sw;
+  document.getElementById('sc-t').textContent = st;
+}
+function updateProgress() {
+  document.getElementById('prog-fill').style.width = (qCount/TOTAL*100)+'%';
+  document.getElementById('prog-label').textContent = qCount+' / '+TOTAL+' questions';
+}
+function showEndScreen() {
+  const pct = Math.round(sc/TOTAL*100);
+  let msg = pct===100?'Perfect counting!':pct>=70?'Great work!':'Keep practising!';
+  let em  = pct===100?'🏆':pct>=70?'🌟':'💪';
+  document.getElementById('coins-area').innerHTML = '';
+  document.getElementById('options').innerHTML =
+    '<div style="grid-column:1/-1;text-align:center;padding:12px 0;">'+
+    '<div style="font-size:2.8rem;">'+em+'</div>'+
+    '<div style="font-family:\'Fredoka One\',cursive;font-size:1.2rem;margin-top:8px;">'+msg+'</div>'+
+    '<div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: '+sc+' / '+TOTAL+' ('+pct+'%)</div>'+
+    '<button onclick="resetGame()" style="margin-top:14px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--gold-lt);color:var(--gold);border:none;border-radius:12px;cursor:pointer;">Play Again!</button>'+
+    '</div>';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('next-btn').classList.remove('show');
+  if (pct===100) launchConfetti(180);
+}
+function resetGame() { sc=sw=st=qCount=0; updateScore(); updateProgress(); generateQ(); }
+function launchConfetti(n) {
+  n=n||55; const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const cols=['#fde047','#4ade80','#60a5fa','#f472b6','#fb923c'];
+  const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,
+    color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*0.07+0.04,
+    vx:Math.random()*2-1,vy:Math.random()*3+2}));
+  let ttl=110;
+  (function draw(){ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;
+      ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;
+      ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});
+    if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();
+}
+generateQ();
+</script>
+</body>
+</html>

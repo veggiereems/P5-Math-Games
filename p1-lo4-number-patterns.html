@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Patterns</title>
+<link href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #fdf4ff;
+    --purple:    #a855f7;
+    --purple-dk: #7e22ce;
+    --purple-lt: #e9d5ff;
+    --mint:      #10b981;
+    --mint-dk:   #065f46;
+    --coral:     #f43f5e;
+    --coral-dk:  #9f1239;
+    --amber:     #f59e0b;
+    --amber-dk:  #92400e;
+    --text:      #1e1b4b;
+    --soft:      #6b7280;
+    --card:      #ffffff;
+    --radius:    20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 85%, rgba(168,85,247,0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(16,185,129,0.1) 0%, transparent 45%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 12px 32px;
+    color: var(--text);
+  }
+
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 {
+    font-family: 'Chewy', cursive;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    color: var(--purple-dk);
+    letter-spacing: 1px;
+  }
+  header p { font-size: 0.82rem; color: var(--soft); margin-top: 2px; font-weight: 700; }
+
+  /* ── Level Buttons ── */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+  .level-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.82rem;
+    padding: 7px 18px; border: 2.5px solid transparent; border-radius: 50px;
+    cursor: pointer; transition: all 0.16s; background: white;
+  }
+  .level-btn.easy   { color: var(--mint-dk);   border-color: var(--mint); }
+  .level-btn.medium { color: var(--purple-dk); border-color: var(--purple); }
+  .level-btn.hard   { color: var(--coral-dk);  border-color: var(--coral); }
+  .level-btn.easy.active   { background: var(--mint);   color: white; }
+  .level-btn.medium.active { background: var(--purple); color: white; }
+  .level-btn.hard.active   { background: var(--coral);  color: white; }
+  .level-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 12px; }
+  .score-box {
+    background: white; border-radius: 12px; padding: 6px 18px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 76px;
+  }
+  .score-box .lbl { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); }
+  .score-box .val { font-family: 'Chewy', cursive; font-size: 1.6rem; line-height: 1.1; }
+  .score-box.c .val { color: var(--mint-dk); }
+  .score-box.w .val { color: var(--coral-dk); }
+  .score-box.t .val { color: var(--purple-dk); }
+
+  /* ── Game Card ── */
+  .game-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    width: 100%; max-width: 600px;
+    box-shadow: 0 8px 32px rgba(168,85,247,0.1);
+    border-top: 5px solid var(--purple);
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+
+  .prompt {
+    font-family: 'Chewy', cursive;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: var(--text); text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Sequence Row ── */
+  .sequence-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .seq-tile {
+    font-family: 'Chewy', cursive;
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+    min-width: 58px; height: 58px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px;
+    background: var(--purple-lt);
+    color: var(--purple-dk);
+    box-shadow: 0 3px 0 rgba(126,34,206,0.2);
+    animation: tileIn 0.2s ease both;
+    position: relative;
+  }
+  @keyframes tileIn {
+    from { transform: translateY(10px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .seq-arrow {
+    font-size: 1.1rem; color: var(--soft);
+    font-weight: 800;
+  }
+
+  /* Blank tile – input */
+  .blank-tile {
+    font-family: 'Chewy', cursive;
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+    min-width: 58px; height: 58px;
+    text-align: center;
+    border: 3px dashed var(--purple);
+    border-radius: 14px;
+    background: white;
+    color: var(--purple-dk);
+    outline: none;
+    transition: border-color 0.16s, background 0.16s;
+    -moz-appearance: textfield;
+    padding: 0 4px;
+  }
+  .blank-tile::-webkit-outer-spin-button,
+  .blank-tile::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .blank-tile:focus { border-color: var(--purple-dk); background: var(--purple-lt); }
+  .blank-tile.correct-t { border-color: var(--mint);  background: #d1fae5; color: var(--mint-dk); border-style: solid; }
+  .blank-tile.wrong-t   { border-color: var(--coral); background: #ffe4e6; color: var(--coral-dk); border-style: solid; }
+
+  /* Rule display badge */
+  .rule-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--purple-lt); border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 0.82rem; font-weight: 800; color: var(--purple-dk);
+  }
+  .rule-badge.hidden-rule { background: #f3f4f6; color: var(--soft); }
+
+  /* ── Check btn ── */
+  .check-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800;
+    font-size: 1rem; padding: 10px 28px;
+    background: var(--purple); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--purple-dk);
+  }
+  .check-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--purple-dk); }
+  .check-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--purple-dk); }
+  .check-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+  /* ── Feedback ── */
+  .feedback {
+    width: 100%; border-radius: 14px; padding: 11px 14px;
+    font-size: 0.9rem; font-weight: 800; text-align: center;
+    display: none; animation: slideDown 0.18s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.ok  { background: #d1fae5; color: #065f46; display: block; }
+  .feedback.err { background: #ffe4e6; color: #9f1239; display: block; }
+
+  /* ── Next btn ── */
+  .next-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800;
+    font-size: 1rem; padding: 10px 30px;
+    background: var(--mint); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--mint-dk); display: none;
+  }
+  .next-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--mint-dk); }
+  .next-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--mint-dk); }
+  .next-btn.show { display: block; }
+
+  /* ── Progress ── */
+  .progress-wrap { width: 100%; max-width: 600px; margin-top: 6px; }
+  .prog-track { background: #e5e7eb; border-radius: 99px; height: 9px; overflow: hidden; }
+  .prog-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--purple), var(--coral));
+    transition: width 0.35s ease; width: 0%;
+  }
+  .prog-label { font-size: 0.72rem; color: var(--soft); text-align: right; margin-top: 3px; font-weight: 800; }
+
+  .reset-btn {
+    margin-top: 8px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    font-size: 0.76rem; color: var(--soft); background: none;
+    border: 2px solid #e5e7eb; padding: 5px 14px;
+    border-radius: 50px; cursor: pointer; transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--soft); color: var(--text); }
+
+  #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <h1>🔮 Number Patterns</h1>
+  <p>Primary 1 · Patterns in Number Sequences</p>
+</header>
+
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium"      onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard"        onclick="setLevel('hard')">💎 Hard</button>
+</div>
+
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div>  <div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div>  <div class="val" id="sc-t">0</div></div>
+</div>
+
+<div class="game-card">
+  <div class="prompt" id="prompt"></div>
+  <div class="rule-badge" id="rule-badge"></div>
+  <div class="sequence-row" id="sequence-row"></div>
+  <button class="check-btn" id="check-btn" onclick="checkAnswer()">Check!</button>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+
+<script>
+let level = 'easy';
+let sc = 0, sw = 0, st = 0, qCount = 0;
+const TOTAL = 10;
+let answered = false;
+let blanks = []; // {index, correctVal}
+let fullSequence = [];
+let step, direction;
+
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+function setLevel(l) {
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.level-btn.' + l).classList.add('active');
+  resetGame();
+}
+
+// ── Generate ──────────────────────────────────────────
+// easy:   count by 1s or 2s, 1 blank at the END, rule shown
+// medium: count by 2s, 5s, or 10s, 1 blank in MIDDLE, rule shown
+// hard:   count by 2s, 3s, 5s, or 10s, 2 blanks anywhere, rule HIDDEN
+
+function generateQ() {
+  answered = false;
+  blanks = [];
+
+  // Pick step and direction
+  if (level === 'easy') {
+    step = rand(0,1) === 0 ? 1 : 2;
+    direction = 'up';
+  } else if (level === 'medium') {
+    const steps = [2, 5, 10];
+    step = steps[rand(0, steps.length - 1)];
+    direction = Math.random() < 0.3 ? 'down' : 'up';
+  } else {
+    const steps = [2, 3, 5, 10];
+    step = steps[rand(0, steps.length - 1)];
+    direction = Math.random() < 0.4 ? 'down' : 'up';
+  }
+
+  // Build a 6-term sequence within 1–100
+  let start;
+  if (direction === 'up') {
+    const maxStart = 100 - step * 5;
+    start = rand(1, Math.max(1, maxStart));
+  } else {
+    start = rand(step * 5, 100);
+  }
+
+  fullSequence = [];
+  for (let i = 0; i < 6; i++) {
+    fullSequence.push(direction === 'up' ? start + i * step : start - i * step);
+  }
+
+  // Clamp to valid range just in case
+  if (fullSequence.some(n => n < 0 || n > 100)) {
+    generateQ(); return;
+  }
+
+  // Determine blank positions
+  if (level === 'easy') {
+    blanks = [{ index: 5, correctVal: fullSequence[5] }];
+  } else if (level === 'medium') {
+    const midIdx = rand(2, 4);
+    blanks = [{ index: midIdx, correctVal: fullSequence[midIdx] }];
+  } else {
+    // 2 non-adjacent blanks
+    let b1 = rand(1, 4);
+    let b2;
+    do { b2 = rand(1, 5); } while (Math.abs(b2 - b1) < 2);
+    blanks = [
+      { index: Math.min(b1,b2), correctVal: fullSequence[Math.min(b1,b2)] },
+      { index: Math.max(b1,b2), correctVal: fullSequence[Math.max(b1,b2)] }
+    ];
+  }
+
+  // Prompt
+  const dirWord = direction === 'up' ? 'counting up' : 'counting down';
+  document.getElementById('prompt').textContent =
+    level === 'hard'
+      ? 'Find the rule and fill in the missing numbers.'
+      : 'Fill in the missing number' + (blanks.length > 1 ? 's' : '') + '.';
+
+  // Rule badge
+  const badge = document.getElementById('rule-badge');
+  if (level === 'hard') {
+    badge.className = 'rule-badge hidden-rule';
+    badge.textContent = '🔍 Rule is hidden — figure it out!';
+  } else {
+    badge.className = 'rule-badge';
+    badge.innerHTML = (direction === 'up' ? '➕' : '➖') +
+      ' Count by <strong>' + step + '</strong> (' + dirWord + ')';
+  }
+
+  // Render sequence
+  renderSequence();
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('check-btn').disabled = false;
+
+  // Focus first blank
+  setTimeout(() => {
+    const first = document.querySelector('.blank-tile');
+    if (first) first.focus();
+  }, 80);
+}
+
+function renderSequence() {
+  const row = document.getElementById('sequence-row');
+  row.innerHTML = '';
+
+  const blankIdxSet = new Set(blanks.map(b => b.index));
+
+  fullSequence.forEach((val, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'seq-arrow';
+      arrow.textContent = direction === 'up' ? '→' : '→';
+      row.appendChild(arrow);
+    }
+
+    if (blankIdxSet.has(i)) {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'blank-tile';
+      input.id = 'blank-' + i;
+      input.min = 0; input.max = 100;
+      input.placeholder = '?';
+      input.autocomplete = 'off';
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          if (!answered) checkAnswer();
+          else if (document.getElementById('next-btn').classList.contains('show')) nextQ();
+        }
+      });
+      row.appendChild(input);
+    } else {
+      const tile = document.createElement('div');
+      tile.className = 'seq-tile';
+      tile.style.animationDelay = (i * 50) + 'ms';
+      tile.textContent = val;
+      row.appendChild(tile);
+    }
+  });
+}
+
+// ── Check ─────────────────────────────────────────────
+function checkAnswer() {
+  if (answered) return;
+
+  // Validate all blanks filled
+  let allFilled = true;
+  blanks.forEach(b => {
+    const inp = document.getElementById('blank-' + b.index);
+    if (!inp || inp.value.trim() === '') allFilled = false;
+  });
+  if (!allFilled) {
+    document.getElementById('feedback').className = 'feedback err';
+    document.getElementById('feedback').textContent = '⚠️ Please fill in all the boxes!';
+    return;
+  }
+
+  answered = true; st++; qCount++;
+  document.getElementById('check-btn').disabled = true;
+
+  let allCorrect = true;
+  blanks.forEach(b => {
+    const inp = document.getElementById('blank-' + b.index);
+    const val = parseInt(inp.value, 10);
+    inp.disabled = true;
+    if (val === b.correctVal) {
+      inp.classList.add('correct-t');
+    } else {
+      inp.classList.add('wrong-t');
+      inp.value = b.correctVal; // show correct answer
+      allCorrect = false;
+    }
+  });
+
+  if (allCorrect) sc++;
+  else sw++;
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + (allCorrect ? 'ok' : 'err');
+
+  const ruleStr = (direction === 'up' ? '+' : '−') + step;
+  if (allCorrect) {
+    fb.textContent = '🎉 Correct! The rule is ' + ruleStr + '. The sequence is: ' + fullSequence.join(', ');
+  } else {
+    fb.textContent = '❌ The rule is ' + ruleStr + '. The sequence is: ' + fullSequence.join(', ');
+  }
+
+  updateScore(); updateProgress();
+  if (qCount < TOTAL) document.getElementById('next-btn').classList.add('show');
+  else showEndScreen();
+}
+
+function nextQ() { generateQ(); }
+
+function updateScore() {
+  document.getElementById('sc-c').textContent = sc;
+  document.getElementById('sc-w').textContent = sw;
+  document.getElementById('sc-t').textContent = st;
+}
+function updateProgress() {
+  document.getElementById('prog-fill').style.width = (qCount / TOTAL * 100) + '%';
+  document.getElementById('prog-label').textContent = qCount + ' / ' + TOTAL + ' questions';
+}
+
+function showEndScreen() {
+  const pct = Math.round((sc / TOTAL) * 100);
+  let msg, em;
+  if (pct === 100)    { msg = "Perfect! You're a pattern master!"; em = '🏆'; }
+  else if (pct >= 70) { msg = "Great pattern spotting!"; em = '🌟'; }
+  else                { msg = "Keep practising — you'll get it!"; em = '💪'; }
+
+  document.getElementById('sequence-row').innerHTML =
+    '<div style="width:100%;text-align:center;padding:16px 0;">' +
+    '<div style="font-size:2.8rem;">' + em + '</div>' +
+    '<div style="font-family:\'Chewy\',cursive;font-size:1.3rem;color:var(--text);margin-top:8px;letter-spacing:0.5px;">' + msg + '</div>' +
+    '<div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: ' + sc + ' / ' + TOTAL + ' (' + pct + '%)</div>' +
+    '<button onclick="resetGame()" style="margin-top:14px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--purple);color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 var(--purple-dk);">Play Again!</button>' +
+    '</div>';
+
+  document.getElementById('rule-badge').style.display = 'none';
+  document.getElementById('check-btn').style.display = 'none';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  if (pct === 100) launchConfetti(180);
+}
+
+function resetGame() {
+  sc = sw = st = qCount = 0;
+  document.getElementById('rule-badge').style.display = '';
+  document.getElementById('check-btn').style.display = '';
+  updateScore(); updateProgress(); generateQ();
+}
+
+function launchConfetti(count) {
+  count = count || 55;
+  const cv = document.getElementById('confetti-canvas');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const cols = ['#a855f7','#10b981','#f43f5e','#f59e0b','#3b82f6','#ec4899'];
+  const ps = Array.from({length: count}, () => ({
+    x: Math.random() * cv.width, y: -10,
+    r: Math.random() * 5 + 3,
+    color: cols[Math.floor(Math.random() * cols.length)],
+    ta: 0, tai: Math.random() * 0.07 + 0.04,
+    vx: Math.random() * 2 - 1, vy: Math.random() * 3 + 2
+  }));
+  let ttl = 110;
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => {
+      p.ta += p.tai; p.y += p.vy; p.x += p.vx;
+      ctx.beginPath(); ctx.lineWidth = p.r / 2; ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + Math.sin(p.ta)*12 + p.r/4, p.y);
+      ctx.lineTo(p.x + Math.sin(p.ta)*12, p.y + p.r/4);
+      ctx.stroke();
+    });
+    ttl--;
+    if (ttl > 0) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  }
+  draw();
+}
+
+generateQ();
+</script>
+</body>
+</html>

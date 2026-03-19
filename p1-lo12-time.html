@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tell the Time</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f8fafc;--blue:#1d4ed8;--blue-lt:#60a5fa;--blue-bg:#dbeafe;
+    --navy:#0f172a;--green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
+    --soft:#6b7280;--text:#1e3a5f;--card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:16px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:14px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,4vw,2.1rem);color:var(--blue);}
+  header p{font-size:0.82rem;color:var(--soft);margin-top:2px;font-weight:700;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:0.8rem;
+    padding:7px 18px;border:2.5px solid transparent;border-radius:50px;
+    cursor:pointer;transition:all 0.16s;background:white;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:var(--green);border-color:#4ade80;}
+  .level-btn.medium{color:var(--blue);border-color:var(--blue-lt);}
+  .level-btn.hard{color:#7c3aed;border-color:#a78bfa;}
+  .level-btn.easy.active{background:#4ade80;color:white;}
+  .level-btn.medium.active{background:var(--blue-lt);color:white;}
+  .level-btn.hard.active{background:#a78bfa;color:white;}
+  .scoreboard{display:flex;gap:10px;margin-bottom:12px;}
+  .score-box{background:white;border-radius:12px;padding:6px 18px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);min-width:76px;}
+  .score-box .lbl{font-size:0.63rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .score-box .val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .score-box.c .val{color:var(--green);}.score-box.w .val{color:var(--red);}.score-box.t .val{color:#2563eb;}
+  .game-card{background:var(--card);border-radius:20px;padding:24px 20px;width:100%;max-width:480px;
+    box-shadow:0 8px 32px rgba(29,78,216,0.1);border-top:5px solid var(--blue-lt);
+    display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .q-label{font-size:0.85rem;font-weight:800;color:var(--soft);}
+  /* Clock */
+  .clock-wrap{padding:8px;}
+  svg.clock{filter:drop-shadow(0 4px 12px rgba(0,0,0,0.15));}
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+  .opt-btn{font-family:'Fredoka One',cursive;font-size:1.15rem;padding:14px 8px;
+    border:3px solid #e5e7eb;border-radius:16px;background:#f9fafb;cursor:pointer;
+    transition:all 0.15s;color:var(--text);-webkit-tap-highlight-color:transparent;}
+  .opt-btn:hover{border-color:var(--blue-lt);background:var(--blue-bg);transform:translateY(-2px);}
+  .opt-btn.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .opt-btn.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+  .opt-btn.reveal{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .opt-btn:disabled{cursor:default;transform:none;}
+  .feedback{width:100%;border-radius:14px;padding:10px 14px;font-size:0.9rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:var(--green-bg);color:var(--green);display:block;}
+  .feedback.err{background:var(--red-bg);color:var(--red);display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;
+    background:var(--blue-lt);color:white;border:none;border-radius:14px;cursor:pointer;
+    box-shadow:0 4px 0 var(--blue);display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .progress-wrap{width:100%;max-width:480px;margin-top:6px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:9px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue-lt),#a78bfa);transition:width 0.35s;width:0%;}
+  .prog-label{font-size:0.72rem;color:var(--soft);text-align:right;margin-top:3px;font-weight:800;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.76rem;
+    color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>🕐 Tell the Time</h1><p>Primary 1 · To 5 Minutes</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div><div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div><div class="val" id="sc-t">0</div></div>
+</div>
+<div class="game-card">
+  <div class="q-label" id="q-label">What time does the clock show?</div>
+  <div class="clock-wrap"><svg class="clock" id="clock-svg" width="200" height="200" viewBox="0 0 200 200"></svg></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+<script>
+// easy:   o'clock and half-past only
+// medium: quarter past/to + o'clock/half
+// hard:   any 5-minute interval
+
+let level='easy', sc=0, sw=0, st=0, qCount=0;
+const TOTAL=10; let correctHour=0, correctMin=0, answered=false;
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+const EASY_MINS  = [0,30];
+const MED_MINS   = [0,15,30,45];
+const ALL_MINS   = [0,5,10,15,20,25,30,35,40,45,50,55];
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');resetGame();}
+
+function timeStr(h,m){
+  const hh=h===0?12:h>12?h-12:h;
+  const mm=m.toString().padStart(2,'0');
+  return hh+':'+mm;
+}
+
+function generateQ(){
+  answered=false;
+  const pool=level==='easy'?EASY_MINS:level==='medium'?MED_MINS:ALL_MINS;
+  correctMin=pool[rand(0,pool.length-1)];
+  correctHour=rand(1,12);
+  const correctStr=timeStr(correctHour,correctMin);
+
+  drawClock(correctHour,correctMin);
+
+  // Generate 3 wrong options
+  const opts=new Set([correctStr]);
+  let attempts=0;
+  while(opts.size<4&&attempts<200){
+    let wh=correctHour,wm=correctMin;
+    if(Math.random()<0.5) wh=rand(1,12);
+    else wm=pool[rand(0,pool.length-1)];
+    const ws=timeStr(wh,wm);
+    if(ws!==correctStr)opts.add(ws);
+    attempts++;
+  }
+  const shuffled=[...opts].sort(()=>Math.random()-0.5);
+  const optDiv=document.getElementById('options');
+  optDiv.innerHTML='';
+  shuffled.forEach(v=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';btn.textContent=v;
+    btn.onclick=()=>selectOpt(btn,v);
+    optDiv.appendChild(btn);
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function drawClock(hour,min){
+  const svg=document.getElementById('clock-svg');
+  const cx=100,cy=100,r=88;
+  // Hour hand angle: 360/12 * hour + 360/12/60 * min
+  const hourAngle=(hour%12)*30 + min*0.5;
+  const minAngle=min*6;
+
+  let html='';
+  // Face
+  html+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="white" stroke="#cbd5e1" stroke-width="3"/>`;
+  html+=`<circle cx="${cx}" cy="${cy}" r="${r-4}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
+
+  // Hour ticks & numbers
+  for(let i=1;i<=12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    const x1=cx+Math.cos(a)*(r-10), y1=cy+Math.sin(a)*(r-10);
+    const x2=cx+Math.cos(a)*(r-18), y2=cy+Math.sin(a)*(r-18);
+    html+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>`;
+    const tx=cx+Math.cos(a)*(r-32), ty=cy+Math.sin(a)*(r-32);
+    html+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="central" font-family="Fredoka One,cursive" font-size="14" fill="#334155">${i}</text>`;
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0)continue;
+    const a=(i*6-90)*Math.PI/180;
+    const x1=cx+Math.cos(a)*(r-10), y1=cy+Math.sin(a)*(r-10);
+    const x2=cx+Math.cos(a)*(r-15), y2=cy+Math.sin(a)*(r-15);
+    html+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#cbd5e1" stroke-width="1" stroke-linecap="round"/>`;
+  }
+
+  // Hour hand
+  const ha=(hourAngle-90)*Math.PI/180;
+  const hx=cx+Math.cos(ha)*42, hy=cy+Math.sin(ha)*42;
+  html+=`<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#1e3a5f" stroke-width="6" stroke-linecap="round"/>`;
+
+  // Minute hand
+  const ma=(minAngle-90)*Math.PI/180;
+  const mx=cx+Math.cos(ma)*62, my=cy+Math.sin(ma)*62;
+  html+=`<line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>`;
+
+  // Centre dot
+  html+=`<circle cx="${cx}" cy="${cy}" r="5" fill="#1e3a5f"/>`;
+  svg.innerHTML=html;
+}
+
+function selectOpt(btn,val){
+  if(answered)return;answered=true;st++;qCount++;
+  const correctStr=timeStr(correctHour,correctMin);
+  const correct=val===correctStr;
+  if(correct){sc++;btn.classList.add('correct');launchConfetti();}
+  else{sw++;btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(b.textContent===correctStr)b.classList.add('reveal');});}
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('feedback');
+  fb.className='feedback '+(correct?'ok':'err');
+  fb.textContent=correct?'🎉 Correct! The time is '+correctStr:'❌ The time is '+correctStr;
+  updateScore();updateProgress();
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,800);
+}
+
+function nextQ(){generateQ();}
+function updateScore(){document.getElementById('sc-c').textContent=sc;document.getElementById('sc-w').textContent=sw;document.getElementById('sc-t').textContent=st;}
+function updateProgress(){document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';document.getElementById('prog-label').textContent=qCount+' / '+TOTAL+' questions';}
+function showEndScreen(){
+  const pct=Math.round(sc/TOTAL*100);
+  const msg=pct===100?"Perfect time-telling!":pct>=70?"Great work!":"Keep practising!";
+  const em=pct===100?'🏆':pct>=70?'🌟':'💪';
+  document.getElementById('clock-wrap') && (document.getElementById('clock-wrap').innerHTML='');
+  document.getElementById('options').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:12px 0;"><div style="font-size:2.8rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.2rem;margin-top:8px;">'+msg+'</div><div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: '+sc+' / '+TOTAL+' ('+pct+'%)</div><button onclick="resetGame()" style="margin-top:14px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--blue-lt);color:white;border:none;border-radius:12px;cursor:pointer;">Play Again!</button></div>';
+  document.getElementById('feedback').className='feedback';document.getElementById('next-btn').classList.remove('show');
+  if(pct===100)launchConfetti(180);
+}
+function resetGame(){sc=sw=st=qCount=0;updateScore();updateProgress();generateQ();}
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#60a5fa','#4ade80','#fbbf24','#f472b6','#a78bfa'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*0.07+0.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+generateQ();
+</script>
+</body>
+</html>

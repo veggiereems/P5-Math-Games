@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Shapes</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf4ff;--purple:#7c3aed;--purple-lt:#a78bfa;--purple-bg:#ede9fe;
+    --pink:#db2777;--pink-lt:#f472b6;--pink-bg:#fce7f3;
+    --green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
+    --blue:#2563eb;--blue-lt:#60a5fa;--soft:#6b7280;--text:#2e1065;--card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:16px 12px 32px;color:var(--text);}
+  header{text-align:center;margin-bottom:14px;}
+  header h1{font-family:'Fredoka One',cursive;font-size:clamp(1.5rem,4vw,2.1rem);color:var(--purple);}
+  header p{font-size:0.82rem;color:var(--soft);margin-top:2px;font-weight:700;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .level-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:0.8rem;padding:7px 18px;
+    border:2.5px solid transparent;border-radius:50px;cursor:pointer;transition:all 0.16s;
+    background:white;-webkit-tap-highlight-color:transparent;}
+  .level-btn.easy{color:var(--green);border-color:#4ade80;}.level-btn.medium{color:var(--purple);border-color:var(--purple-lt);}.level-btn.hard{color:var(--pink);border-color:var(--pink-lt);}
+  .level-btn.easy.active{background:#4ade80;color:white;}.level-btn.medium.active{background:var(--purple-lt);color:white;}.level-btn.hard.active{background:var(--pink-lt);color:white;}
+  .scoreboard{display:flex;gap:10px;margin-bottom:12px;}
+  .score-box{background:white;border-radius:12px;padding:6px 18px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);min-width:76px;}
+  .score-box .lbl{font-size:0.63rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--soft);}
+  .score-box .val{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1.1;}
+  .score-box.c .val{color:var(--green);}.score-box.w .val{color:var(--red);}.score-box.t .val{color:var(--blue);}
+  .game-card{background:var(--card);border-radius:20px;padding:24px 20px;width:100%;max-width:480px;
+    box-shadow:0 8px 32px rgba(124,58,237,0.1);border-top:5px solid var(--purple-lt);
+    display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .q-label{font-size:0.85rem;font-weight:800;color:var(--soft);}
+  /* Shape display */
+  .shape-wrap{padding:12px;display:flex;justify-content:center;align-items:center;min-height:140px;}
+  /* Options */
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+  .opt-btn{font-family:'Fredoka One',cursive;font-size:0.95rem;padding:14px 6px;
+    border:3px solid #e5e7eb;border-radius:16px;background:#f9fafb;cursor:pointer;
+    transition:all 0.15s;color:var(--text);-webkit-tap-highlight-color:transparent;
+    line-height:1.2;word-break:break-word;}
+  .opt-btn:hover{border-color:var(--purple-lt);background:var(--purple-bg);transform:translateY(-2px);}
+  .opt-btn.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .opt-btn.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+  .opt-btn.reveal{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .opt-btn:disabled{cursor:default;transform:none;}
+  .feedback{width:100%;border-radius:14px;padding:10px 14px;font-size:0.9rem;font-weight:800;text-align:center;display:none;}
+  .feedback.ok{background:var(--green-bg);color:var(--green);display:block;}
+  .feedback.err{background:var(--red-bg);color:var(--red);display:block;}
+  .next-btn{font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding:10px 30px;
+    background:var(--blue-lt);color:white;border:none;border-radius:14px;cursor:pointer;
+    box-shadow:0 4px 0 var(--blue);display:none;-webkit-tap-highlight-color:transparent;}
+  .next-btn.show{display:block;}
+  .progress-wrap{width:100%;max-width:480px;margin-top:6px;}
+  .prog-track{background:#e5e7eb;border-radius:99px;height:9px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--purple-lt),var(--pink-lt));transition:width 0.35s;width:0%;}
+  .prog-label{font-size:0.72rem;color:var(--soft);text-align:right;margin-top:3px;font-weight:800;}
+  .reset-btn{margin-top:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.76rem;
+    color:var(--soft);background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;cursor:pointer;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header><h1>🔷 2D Shapes</h1><p>Primary 1 · Name & Identify</p></header>
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium" onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard" onclick="setLevel('hard')">💎 Hard</button>
+</div>
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div><div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div><div class="val" id="sc-t">0</div></div>
+</div>
+<div class="game-card">
+  <div class="q-label" id="q-label">What shape is this?</div>
+  <div class="shape-wrap"><svg id="shape-svg" width="150" height="140" viewBox="0 0 150 140"></svg></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+<script>
+// Shapes per syllabus: rectangle, square, triangle, circle, half circle, quarter circle
+// easy:   show shape → pick name (4 options from easy set)
+// medium: show shape → pick name (all 6 shapes)
+// hard:   show name → pick shape (all 6)
+
+const COLORS=['#a78bfa','#f472b6','#60a5fa','#34d399','#fbbf24','#fb923c'];
+
+const SHAPES=[
+  {
+    name:'Rectangle',
+    draw:(svg,col)=>{
+      const r=Math.random()<0.5;
+      svg.innerHTML=`<rect x="${r?20:30}" y="${r?35:20}" width="${r?110:90}" height="${r?70:100}" rx="4" fill="${col}" stroke="${col}" stroke-width="0" opacity="0.9"/>`;
+    }
+  },
+  {
+    name:'Square',
+    draw:(svg,col)=>{
+      svg.innerHTML=`<rect x="25" y="20" width="100" height="100" fill="${col}" opacity="0.9"/>`;
+    }
+  },
+  {
+    name:'Triangle',
+    draw:(svg,col)=>{
+      const variants=[
+        '75,10 140,130 10,130',
+        '10,130 140,130 75,10',
+        '10,10 140,70 10,130'
+      ];
+      svg.innerHTML=`<polygon points="${variants[Math.floor(Math.random()*variants.length)]}" fill="${col}" opacity="0.9"/>`;
+    }
+  },
+  {
+    name:'Circle',
+    draw:(svg,col)=>{
+      svg.innerHTML=`<circle cx="75" cy="70" r="60" fill="${col}" opacity="0.9"/>`;
+    }
+  },
+  {
+    name:'Half Circle',
+    draw:(svg,col)=>{
+      const flip=Math.random()<0.5;
+      if(flip){
+        svg.innerHTML=`<path d="M15,70 A60,60 0 0,1 135,70 Z" fill="${col}" opacity="0.9"/>`;
+      } else {
+        svg.innerHTML=`<path d="M15,70 A60,60 0 0,0 135,70 Z" fill="${col}" opacity="0.9"/>`;
+      }
+    }
+  },
+  {
+    name:'Quarter Circle',
+    draw:(svg,col)=>{
+      const corners=[
+        'M75,70 L75,10 A60,60 0 0,1 135,70 Z',
+        'M75,70 L135,70 A60,60 0 0,1 75,130 Z',
+        'M75,70 L75,130 A60,60 0 0,1 15,70 Z',
+        'M75,70 L15,70 A60,60 0 0,1 75,10 Z',
+      ];
+      svg.innerHTML=`<path d="${corners[Math.floor(Math.random()*corners.length)]}" fill="${col}" opacity="0.9"/>`;
+    }
+  }
+];
+
+const EASY_SET=[0,1,2,3]; // rect, square, tri, circle
+
+let level='easy',sc=0,sw=0,st=0,qCount=0;
+const TOTAL=10; let correctName='',answered=false;
+
+function setLevel(l){level=l;document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.level-btn.'+l).classList.add('active');resetGame();}
+
+function generateQ(){
+  answered=false;
+  const pool=level==='easy'?EASY_SET.map(i=>SHAPES[i]):SHAPES;
+  const shape=pool[Math.floor(Math.random()*pool.length)];
+  correctName=shape.name;
+  const col=COLORS[Math.floor(Math.random()*COLORS.length)];
+
+  const svg=document.getElementById('shape-svg');
+
+  if(level==='hard'){
+    // Show name, pick shape — no instruction text
+    document.getElementById('q-label').textContent='Which shape is this?';
+    svg.innerHTML='';
+    svg.setAttribute('height','0');
+    // Show name as styled HTML div, centered
+    let nameDiv=document.getElementById('shape-name-display');
+    if(!nameDiv){
+      nameDiv=document.createElement('div');
+      nameDiv.id='shape-name-display';
+      nameDiv.style.cssText='font-family:\'Fredoka One\',cursive;font-size:2rem;color:var(--purple);text-align:center;width:100%;padding:10px 0;';
+      svg.parentNode.insertBefore(nameDiv,svg);
+    }
+    nameDiv.style.display='block';
+    nameDiv.textContent=correctName;
+    // Options: 4 shape SVGs
+    const optPool=[...pool].sort(()=>Math.random()-0.5).slice(0,4);
+    if(!optPool.find(s=>s.name===correctName)) optPool[0]=shape;
+    optPool.sort(()=>Math.random()-0.5);
+    const optDiv=document.getElementById('options');
+    optDiv.innerHTML='';
+    optDiv.style.gridTemplateColumns='1fr 1fr';
+    optPool.forEach(s=>{
+      const btn=document.createElement('button');
+      btn.className='opt-btn';btn.style.padding='10px 4px';
+      const miniSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      miniSvg.setAttribute('width','80');miniSvg.setAttribute('height','70');miniSvg.setAttribute('viewBox','0 0 150 140');
+      s.draw(miniSvg,COLORS[Math.floor(Math.random()*COLORS.length)]);
+      btn.appendChild(miniSvg);
+      btn.onclick=()=>selectOpt(btn,s.name);
+      optDiv.appendChild(btn);
+    });
+  } else {
+    // Show shape, pick name — ensure name div hidden and SVG visible
+    svg.setAttribute('height','140');
+    const nameDiv=document.getElementById('shape-name-display');
+    if(nameDiv) { nameDiv.textContent=''; nameDiv.style.display='none'; }
+    document.getElementById('q-label').textContent='What shape is this?';
+    shape.draw(svg,col);
+    const opts=new Set([correctName]);
+    while(opts.size<4){
+      const r=pool[Math.floor(Math.random()*pool.length)];
+      opts.add(r.name);
+    }
+    const shuffled=[...opts].sort(()=>Math.random()-0.5);
+    const optDiv=document.getElementById('options');
+    optDiv.innerHTML='';
+    optDiv.style.gridTemplateColumns='1fr 1fr';
+    shuffled.forEach(v=>{
+      const btn=document.createElement('button');
+      btn.className='opt-btn';btn.textContent=v;
+      btn.onclick=()=>selectOpt(btn,v);
+      optDiv.appendChild(btn);
+    });
+  }
+
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('next-btn').classList.remove('show');
+}
+
+function selectOpt(btn,val){
+  if(answered)return;answered=true;st++;qCount++;
+  const correct=val===correctName;
+  if(correct){sc++;btn.classList.add('correct');launchConfetti();}
+  else{sw++;btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(b.textContent===correctName||b.dataset.name===correctName)b.classList.add('reveal');});}
+  document.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('feedback');
+  fb.className='feedback '+(correct?'ok':'err');
+  fb.textContent=correct?'🎉 Correct! It\'s a '+correctName:'❌ It\'s a '+correctName;
+  updateScore();updateProgress();
+  if(qCount<TOTAL)document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen,800);
+}
+function nextQ(){generateQ();}
+function updateScore(){document.getElementById('sc-c').textContent=sc;document.getElementById('sc-w').textContent=sw;document.getElementById('sc-t').textContent=st;}
+function updateProgress(){document.getElementById('prog-fill').style.width=(qCount/TOTAL*100)+'%';document.getElementById('prog-label').textContent=qCount+' / '+TOTAL+' questions';}
+function showEndScreen(){
+  const pct=Math.round(sc/TOTAL*100);
+  const msg=pct===100?'Shape master!':pct>=70?'Great work!':'Keep practising!';
+  const em=pct===100?'🏆':pct>=70?'🌟':'💪';
+  document.getElementById('shape-svg').innerHTML='';
+  document.getElementById('options').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:12px 0;"><div style="font-size:2.8rem;">'+em+'</div><div style="font-family:\'Fredoka One\',cursive;font-size:1.2rem;margin-top:8px;">'+msg+'</div><div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: '+sc+' / '+TOTAL+' ('+pct+'%)</div><button onclick="resetGame()" style="margin-top:14px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--purple-lt);color:white;border:none;border-radius:12px;cursor:pointer;">Play Again!</button></div>';
+  document.getElementById('feedback').className='feedback';document.getElementById('next-btn').classList.remove('show');
+  if(pct===100)launchConfetti(180);
+}
+function resetGame(){sc=sw=st=qCount=0;updateScore();updateProgress();generateQ();}
+function launchConfetti(n){n=n||55;const cv=document.getElementById('confetti-canvas'),ctx=cv.getContext('2d');cv.width=window.innerWidth;cv.height=window.innerHeight;const cols=['#a78bfa','#f472b6','#60a5fa','#34d399','#fbbf24'];const ps=Array.from({length:n},()=>({x:Math.random()*cv.width,y:-10,r:Math.random()*5+3,color:cols[Math.floor(Math.random()*cols.length)],ta:0,tai:Math.random()*0.07+0.04,vx:Math.random()*2-1,vy:Math.random()*3+2}));let ttl=110;(function draw(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.ta+=p.tai;p.y+=p.vy;p.x+=p.vx;ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4,p.y);ctx.lineTo(p.x+Math.sin(p.ta)*12,p.y+p.r/4);ctx.stroke();});if(--ttl>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);})();}
+generateQ();
+</script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordinal Numbers</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #fff8f0;
+    --orange:   #f97316;
+    --orange-dk:#c2410c;
+    --sky:      #0ea5e9;
+    --sky-dk:   #0369a1;
+    --green:    #22c55e;
+    --green-dk: #15803d;
+    --red:      #ef4444;
+    --red-dk:   #b91c1c;
+    --yellow:   #fbbf24;
+    --pink:     #ec4899;
+    --text:     #1c1917;
+    --soft:     #78716c;
+    --card:     #ffffff;
+    --radius:   20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 5% 95%, rgba(249,115,22,0.12) 0%, transparent 40%),
+      radial-gradient(circle at 95% 5%, rgba(14,165,233,0.1) 0%, transparent 40%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 12px 32px;
+    color: var(--text);
+  }
+
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 {
+    font-family: 'Lilita One', cursive;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    color: var(--orange-dk);
+  }
+  header p { font-size: 0.82rem; color: var(--soft); margin-top: 2px; font-weight: 600; }
+
+  /* ── Level Buttons ── */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+  .level-btn {
+    font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.8rem;
+    padding: 7px 18px; border: 2.5px solid transparent; border-radius: 50px;
+    cursor: pointer; transition: all 0.16s; background: white;
+  }
+  .level-btn.easy   { color: var(--green-dk); border-color: var(--green); }
+  .level-btn.medium { color: var(--sky-dk);   border-color: var(--sky); }
+  .level-btn.hard   { color: var(--red-dk);   border-color: var(--red); }
+  .level-btn.easy.active   { background: var(--green); color: white; }
+  .level-btn.medium.active { background: var(--sky);   color: white; }
+  .level-btn.hard.active   { background: var(--red);   color: white; }
+  .level-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 12px; }
+  .score-box {
+    background: white; border-radius: 12px; padding: 6px 18px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 76px;
+  }
+  .score-box .lbl { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); }
+  .score-box .val { font-family: 'Lilita One', cursive; font-size: 1.55rem; line-height: 1.1; }
+  .score-box.c .val { color: var(--green-dk); }
+  .score-box.w .val { color: var(--red-dk); }
+  .score-box.t .val { color: var(--sky-dk); }
+
+  /* ── Game Card ── */
+  .game-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    width: 100%; max-width: 620px;
+    box-shadow: 0 8px 32px rgba(249,115,22,0.1);
+    border-top: 5px solid var(--orange);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+
+  .prompt {
+    font-family: 'Lilita One', cursive;
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    color: var(--text); text-align: center; line-height: 1.4;
+  }
+  .prompt .hl {
+    color: var(--orange);
+    background: #fff7ed;
+    padding: 1px 8px; border-radius: 6px;
+  }
+
+  /* ── Race Track ── */
+  .race-track {
+    width: 100%;
+    background: #f1f5f9;
+    border-radius: 14px;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 2px solid #e2e8f0;
+  }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .track-pos {
+    font-family: 'Lilita One', cursive;
+    font-size: 0.75rem;
+    color: var(--soft);
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .racer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border-radius: 10px;
+    padding: 6px 12px;
+    border: 2px solid #e2e8f0;
+    flex: 1;
+    transition: all 0.2s;
+    cursor: default;
+    animation: racerIn 0.2s ease both;
+    position: relative;
+  }
+  @keyframes racerIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+  }
+
+  .racer.highlighted {
+    border-color: var(--orange);
+    background: #fff7ed;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+  }
+
+  .racer-emoji { font-size: 1.4rem; }
+  .racer-name  { font-weight: 700; font-size: 0.88rem; color: var(--text); }
+
+  /* position medal */
+  .medal {
+    margin-left: auto;
+    font-family: 'Lilita One', cursive;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 50px;
+    background: #f1f5f9;
+    color: var(--soft);
+  }
+  .medal.gold   { background: #fef9c3; color: #854d0e; }
+  .medal.silver { background: #f1f5f9; color: #475569; }
+  .medal.bronze { background: #fff7ed; color: #9a3412; }
+
+  /* ── Answer options ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .opt-btn {
+    font-family: 'Lilita One', cursive;
+    font-size: 1.05rem;
+    padding: 12px 8px;
+    border-radius: 14px;
+    border: 2.5px solid #e2e8f0;
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--orange);
+    background: #fff7ed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(249,115,22,0.15);
+  }
+  .opt-btn.selected  { border-color: var(--sky);   background: #e0f2fe; color: var(--sky-dk); }
+  .opt-btn.correct-o { border-color: var(--green); background: #dcfce7; color: var(--green-dk); }
+  .opt-btn.wrong-o   { border-color: var(--red);   background: #fee2e2; color: var(--red-dk); }
+  .opt-btn:disabled  { cursor: default; }
+
+  /* ── Type input (hard mode) ── */
+  .type-row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .ord-input {
+    font-family: 'Lilita One', cursive;
+    font-size: 1.4rem; width: 120px; text-align: center;
+    border: 3px solid #e2e8f0; border-radius: 14px;
+    padding: 8px 10px; outline: none;
+    transition: border-color 0.15s; color: var(--text);
+  }
+  .ord-input:focus { border-color: var(--orange); }
+  .ord-input.correct-i { border-color: var(--green); background: #dcfce7; }
+  .ord-input.wrong-i   { border-color: var(--red);   background: #fee2e2; }
+
+  /* ── Check btn ── */
+  .check-btn {
+    font-family: 'Poppins', sans-serif; font-weight: 700;
+    font-size: 1rem; padding: 10px 28px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--orange-dk);
+  }
+  .check-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--orange-dk); }
+  .check-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--orange-dk); }
+  .check-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+  /* ── Feedback ── */
+  .feedback {
+    width: 100%; border-radius: 14px; padding: 11px 14px;
+    font-size: 0.9rem; font-weight: 700; text-align: center;
+    display: none; animation: slideDown 0.18s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.ok  { background: #dcfce7; color: #166534; display: block; }
+  .feedback.err { background: #fee2e2; color: #991b1b; display: block; }
+
+  /* ── Next btn ── */
+  .next-btn {
+    font-family: 'Poppins', sans-serif; font-weight: 700;
+    font-size: 1rem; padding: 10px 30px;
+    background: var(--green); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--green-dk); display: none;
+  }
+  .next-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--green-dk); }
+  .next-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--green-dk); }
+  .next-btn.show { display: block; }
+
+  /* ── Progress ── */
+  .progress-wrap { width: 100%; max-width: 620px; margin-top: 6px; }
+  .prog-track { background: #e5e7eb; border-radius: 99px; height: 9px; overflow: hidden; }
+  .prog-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--orange), var(--pink));
+    transition: width 0.35s ease; width: 0%;
+  }
+  .prog-label { font-size: 0.72rem; color: var(--soft); text-align: right; margin-top: 3px; font-weight: 700; }
+
+  .reset-btn {
+    margin-top: 8px; font-family: 'Poppins', sans-serif; font-weight: 600;
+    font-size: 0.76rem; color: var(--soft); background: none;
+    border: 2px solid #e5e7eb; padding: 5px 14px;
+    border-radius: 50px; cursor: pointer; transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--soft); color: var(--text); }
+
+  #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <h1>🏁 Ordinal Numbers</h1>
+  <p>Primary 1 · First to Tenth</p>
+</header>
+
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium"      onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard"        onclick="setLevel('hard')">💎 Hard</button>
+</div>
+
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div>  <div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div>  <div class="val" id="sc-t">0</div></div>
+</div>
+
+<div class="game-card">
+  <div class="prompt" id="prompt"></div>
+  <div class="race-track" id="race-track"></div>
+  <div id="answer-area"></div>
+  <button class="check-btn" id="check-btn" onclick="checkAnswer()">Check!</button>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+
+<script>
+const ORDINALS = [
+  { num: 1, word: 'first',  sym: '1st' },
+  { num: 2, word: 'second', sym: '2nd' },
+  { num: 3, word: 'third',  sym: '3rd' },
+  { num: 4, word: 'fourth', sym: '4th' },
+  { num: 5, word: 'fifth',  sym: '5th' },
+  { num: 6, word: 'sixth',  sym: '6th' },
+  { num: 7, word: 'seventh',sym: '7th' },
+  { num: 8, word: 'eighth', sym: '8th' },
+  { num: 9, word: 'ninth',  sym: '9th' },
+  { num: 10,word: 'tenth',  sym: '10th'},
+];
+
+const RACERS = [
+  { emoji: '🐢', name: 'Shelly' },
+  { emoji: '🐇', name: 'Benny' },
+  { emoji: '🦊', name: 'Finn' },
+  { emoji: '🐸', name: 'Hoppy' },
+  { emoji: '🐼', name: 'Bambi' },
+  { emoji: '🦁', name: 'Leo' },
+  { emoji: '🐨', name: 'Koby' },
+  { emoji: '🐯', name: 'Stripes' },
+  { emoji: '🦄', name: 'Sparky' },
+  { emoji: '🐮', name: 'Moo' },
+];
+
+// question types:
+// easy   → word  → pick symbol  (e.g. "Finn is third. What is the symbol?" → 3rd)
+// medium → symbol → pick word   (e.g. "Moo is 7th. What is the word?" → seventh)
+// hard   → position → type symbol  (e.g. "Which racer is in the 5th position? Type the symbol for that position." )
+
+let level = 'easy';
+let sc = 0, sw = 0, st = 0, qCount = 0;
+const TOTAL = 10;
+let answered = false;
+let correctAnswer, qType;
+let racerList = [];
+let targetPos; // 1-based
+
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+function setLevel(l) {
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.level-btn.' + l).classList.add('active');
+  resetGame();
+}
+
+function generateQ() {
+  answered = false;
+
+  // How many racers to show
+  const count = level === 'easy' ? rand(4, 6) : level === 'medium' ? rand(5, 8) : rand(7, 10);
+  racerList = shuffle(RACERS).slice(0, count);
+  targetPos = rand(1, count); // 1-based
+
+  const target = racerList[targetPos - 1];
+  const ord = ORDINALS[targetPos - 1];
+
+  if (level === 'easy') {
+    // Given word → pick symbol
+    qType = 'word_to_sym';
+    correctAnswer = ord.sym;
+    document.getElementById('prompt').innerHTML =
+      '<span class="hl">' + target.emoji + ' ' + target.name + '</span> is in ' +
+      '<span class="hl">' + ord.word + '</span> place. Which symbol shows this position?';
+    renderTrack(targetPos);
+    renderOptions(buildSymbolOptions(ord.sym), 'sym');
+
+  } else if (level === 'medium') {
+    // Given symbol → pick word
+    qType = 'sym_to_word';
+    correctAnswer = ord.word;
+    document.getElementById('prompt').innerHTML =
+      '<span class="hl">' + target.emoji + ' ' + target.name + '</span> finished in position ' +
+      '<span class="hl">' + ord.sym + '</span>. What is the word for this position?';
+    renderTrack(targetPos);
+    renderOptions(buildWordOptions(ord.word), 'word');
+
+  } else {
+    // Hard: look at track → type symbol for highlighted racer
+    qType = 'type_word';
+    correctAnswer = ord.word;
+    document.getElementById('prompt').innerHTML =
+      'Look at the race track. What position is ' +
+      '<span class="hl">' + target.emoji + ' ' + target.name + '</span> in? Type the word (e.g. third).';
+    renderTrack(targetPos);
+    renderTypeInput();
+  }
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('check-btn').disabled = false;
+
+  setTimeout(() => {
+    const inp = document.getElementById('ord-input');
+    if (inp) inp.focus();
+  }, 80);
+}
+
+// ── Render race track ──────────────────────────────────
+function renderTrack(highlight) {
+  const track = document.getElementById('race-track');
+  track.innerHTML = '';
+  racerList.forEach((r, i) => {
+    const pos = i + 1;
+    const ord = ORDINALS[i];
+    const row = document.createElement('div');
+    row.className = 'track-row';
+    row.style.animationDelay = (i * 40) + 'ms';
+
+    const racer = document.createElement('div');
+    racer.className = 'racer' + (pos === highlight ? ' highlighted' : '');
+
+    const emoji = document.createElement('span');
+    emoji.className = 'racer-emoji';
+    emoji.textContent = r.emoji;
+
+    const name = document.createElement('span');
+    name.className = 'racer-name';
+    name.textContent = r.name;
+
+    const medal = document.createElement('span');
+    medal.className = 'medal' + (pos === 1 ? ' gold' : pos === 2 ? ' silver' : pos === 3 ? ' bronze' : '');
+    medal.textContent = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
+
+    racer.appendChild(emoji);
+    racer.appendChild(name);
+    racer.appendChild(medal);
+    row.appendChild(racer);
+    track.appendChild(row);
+  });
+}
+
+// ── Build option sets ─────────────────────────────────
+function buildSymbolOptions(correct) {
+  const pool = ORDINALS.map(o => o.sym);
+  const wrong = shuffle(pool.filter(s => s !== correct)).slice(0, 3);
+  return shuffle([correct, ...wrong]);
+}
+
+function buildWordOptions(correct) {
+  const pool = ORDINALS.map(o => o.word);
+  const wrong = shuffle(pool.filter(w => w !== correct)).slice(0, 3);
+  return shuffle([correct, ...wrong]);
+}
+
+// ── Render multiple choice ─────────────────────────────
+function renderOptions(opts, type) {
+  const area = document.getElementById('answer-area');
+  area.innerHTML = '<div class="options-grid" id="opts-grid"></div>';
+  const grid = document.getElementById('opts-grid');
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = function() { selectOpt(opt, btn); };
+    grid.appendChild(btn);
+  });
+}
+
+let selectedOpt = null;
+let selectedBtn = null;
+
+function selectOpt(val, btn) {
+  if (answered) return;
+  selectedOpt = val;
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedBtn = btn;
+}
+
+// ── Render type input ─────────────────────────────────
+function renderTypeInput() {
+  document.getElementById('answer-area').innerHTML =
+    '<div class="type-row">' +
+    '<input class="ord-input" id="ord-input" type="text" placeholder="e.g. third" maxlength="8" autocomplete="off"/>' +
+    '</div>';
+  document.getElementById('ord-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      if (!answered) checkAnswer();
+      else if (document.getElementById('next-btn').classList.contains('show')) nextQ();
+    }
+  });
+}
+
+// ── Check answer ──────────────────────────────────────
+function checkAnswer() {
+  if (answered) return;
+
+  if (qType === 'word_to_sym' || qType === 'sym_to_word') {
+    if (!selectedOpt) {
+      document.getElementById('feedback').className = 'feedback err';
+      document.getElementById('feedback').textContent = '⚠️ Please select an answer first!';
+      return;
+    }
+    answered = true; st++; qCount++;
+    document.getElementById('check-btn').disabled = true;
+    document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+    const correct = selectedOpt.toLowerCase() === correctAnswer.toLowerCase();
+    if (correct) {
+      sc++;
+      selectedBtn.classList.remove('selected');
+      selectedBtn.classList.add('correct-o');
+      launchConfetti();
+    } else {
+      sw++;
+      selectedBtn.classList.remove('selected');
+      selectedBtn.classList.add('wrong-o');
+      // highlight correct
+      document.querySelectorAll('.opt-btn').forEach(b => {
+        if (b.textContent.toLowerCase() === correctAnswer.toLowerCase()) b.classList.add('correct-o');
+      });
+    }
+
+    const ord = ORDINALS[targetPos - 1];
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback ' + (correct ? 'ok' : 'err');
+    fb.textContent = correct
+      ? '🎉 Correct! ' + ord.word + ' = ' + ord.sym
+      : '❌ The answer is ' + correctAnswer + '. ' + ord.word + ' = ' + ord.sym;
+
+  } else {
+    // type
+    const inp = document.getElementById('ord-input');
+    const val = inp.value.trim().toLowerCase();
+    if (!val) {
+      inp.style.borderColor = '#fbbf24';
+      setTimeout(() => { inp.style.borderColor = ''; }, 700);
+      return;
+    }
+
+    answered = true; st++; qCount++;
+    document.getElementById('check-btn').disabled = true;
+    inp.disabled = true;
+
+    const correct = val === correctAnswer;
+    const ord = ORDINALS[targetPos - 1];
+
+    if (correct) {
+      sc++;
+      inp.classList.add('correct-i');
+      launchConfetti();
+    } else {
+      sw++;
+      inp.classList.add('wrong-i');
+      inp.value = ord.sym;
+    }
+
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback ' + (correct ? 'ok' : 'err');
+    fb.textContent = correct
+      ? '🎉 Correct! Position ' + targetPos + ' = ' + ord.word + ' (' + ord.sym + ')'
+      : '❌ The answer is "' + ord.word + '" (' + ord.sym + ')';
+  }
+
+  selectedOpt = null; selectedBtn = null;
+  updateScore(); updateProgress();
+  if (qCount < TOTAL) document.getElementById('next-btn').classList.add('show');
+  else showEndScreen();
+}
+
+function nextQ() { generateQ(); }
+
+function updateScore() {
+  document.getElementById('sc-c').textContent = sc;
+  document.getElementById('sc-w').textContent = sw;
+  document.getElementById('sc-t').textContent = st;
+}
+function updateProgress() {
+  document.getElementById('prog-fill').style.width = (qCount / TOTAL * 100) + '%';
+  document.getElementById('prog-label').textContent = qCount + ' / ' + TOTAL + ' questions';
+}
+
+function showEndScreen() {
+  const pct = Math.round((sc / TOTAL) * 100);
+  let msg, em;
+  if (pct === 100)    { msg = "Perfect! You're an ordinal champion!"; em = '🏆'; }
+  else if (pct >= 70) { msg = "Great job! Almost there!"; em = '🌟'; }
+  else                { msg = "Keep practising — you'll get it!"; em = '💪'; }
+  document.getElementById('race-track').innerHTML =
+    '<div style="width:100%;text-align:center;padding:16px 0;">' +
+    '<div style="font-size:2.8rem;">' + em + '</div>' +
+    '<div style="font-family:\'Lilita One\',cursive;font-size:1.25rem;color:var(--text);margin-top:8px;">' + msg + '</div>' +
+    '<div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:600;">Score: ' + sc + ' / ' + TOTAL + ' (' + pct + '%)</div>' +
+    '<button onclick="resetGame()" style="margin-top:14px;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:0.9rem;padding:9px 26px;background:var(--orange);color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 var(--orange-dk);">Play Again!</button>' +
+    '</div>';
+  document.getElementById('answer-area').innerHTML = '';
+  document.getElementById('check-btn').style.display = 'none';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  if (pct === 100) launchConfetti(180);
+}
+
+function resetGame() {
+  sc = sw = st = qCount = 0;
+  selectedOpt = null; selectedBtn = null;
+  document.getElementById('check-btn').style.display = '';
+  updateScore(); updateProgress(); generateQ();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !document.getElementById('ord-input')) {
+    if (!answered) checkAnswer();
+    else if (document.getElementById('next-btn').classList.contains('show')) nextQ();
+  }
+});
+
+function launchConfetti(count) {
+  count = count || 55;
+  const cv = document.getElementById('confetti-canvas');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const cols = ['#f97316','#22c55e','#0ea5e9','#ec4899','#fbbf24','#a855f7'];
+  const ps = Array.from({length: count}, () => ({
+    x: Math.random() * cv.width, y: -10,
+    r: Math.random() * 5 + 3,
+    color: cols[Math.floor(Math.random() * cols.length)],
+    ta: 0, tai: Math.random() * 0.07 + 0.04,
+    vx: Math.random() * 2 - 1, vy: Math.random() * 3 + 2
+  }));
+  let ttl = 110;
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => {
+      p.ta += p.tai; p.y += p.vy; p.x += p.vx;
+      ctx.beginPath(); ctx.lineWidth = p.r / 2; ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + Math.sin(p.ta)*12 + p.r/4, p.y);
+      ctx.lineTo(p.x + Math.sin(p.ta)*12, p.y + p.r/4);
+      ctx.stroke();
+    });
+    ttl--;
+    if (ttl > 0) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  }
+  draw();
+}
+
+generateQ();
+</script>
+</body>
+</html>

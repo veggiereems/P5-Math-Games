@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Within 20</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f0fdf4;
+    --green:     #16a34a;
+    --green-lt:  #22c55e;
+    --green-bg:  #dcfce7;
+    --blue:      #2563eb;
+    --blue-lt:   #60a5fa;
+    --blue-bg:   #dbeafe;
+    --red:       #dc2626;
+    --red-bg:    #fee2e2;
+    --amber:     #d97706;
+    --amber-bg:  #fef3c7;
+    --text:      #14532d;
+    --soft:      #6b7280;
+    --card:      #ffffff;
+    --radius:    20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 90%, rgba(34,197,94,0.15) 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(96,165,250,0.10) 0%, transparent 40%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 12px 32px; color: var(--text);
+  }
+
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(1.6rem,4vw,2.3rem); color: var(--green); }
+  header p  { font-size: 0.82rem; color: var(--soft); margin-top: 2px; font-weight: 700; }
+
+  /* ── Level buttons ── */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px; }
+  .level-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.8rem;
+    padding: 7px 18px; border: 2.5px solid transparent; border-radius: 50px;
+    cursor: pointer; transition: all 0.16s; background: white;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .level-btn.easy   { color: var(--green); border-color: var(--green-lt); }
+  .level-btn.medium { color: var(--blue);  border-color: var(--blue-lt); }
+  .level-btn.hard   { color: var(--red);   border-color: #f87171; }
+  .level-btn.easy.active   { background: var(--green-lt); color: white; }
+  .level-btn.medium.active { background: var(--blue-lt);  color: white; }
+  .level-btn.hard.active   { background: #f87171;         color: white; }
+  .level-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display: flex; gap: 10px; margin-bottom: 12px; }
+  .score-box { background: white; border-radius: 12px; padding: 6px 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 76px; }
+  .score-box .lbl { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--soft); }
+  .score-box .val { font-family: 'Fredoka One', cursive; font-size: 1.6rem; line-height: 1.1; }
+  .score-box.c .val { color: var(--green); }
+  .score-box.w .val { color: var(--red); }
+  .score-box.t .val { color: var(--blue); }
+
+  /* ── Game card ── */
+  .game-card {
+    background: var(--card); border-radius: var(--radius); padding: 26px 22px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 8px 32px rgba(22,163,74,0.1);
+    border-top: 5px solid var(--green-lt);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+
+  /* ── Timer bar ── */
+  .timer-wrap { width: 100%; }
+  .timer-track { background: #e5e7eb; border-radius: 99px; height: 10px; overflow: hidden; }
+  .timer-fill {
+    height: 100%; border-radius: 99px;
+    background: var(--green-lt);
+    transition: width 0.1s linear, background 0.4s;
+    width: 100%;
+  }
+  .timer-fill.warn   { background: var(--amber); }
+  .timer-fill.danger { background: var(--red); }
+  .timer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 3px; }
+  .timer-label { font-size: 0.78rem; font-weight: 800; color: var(--soft); }
+  .timer-hint  { font-size: 0.68rem; font-weight: 700; color: var(--soft); }
+
+  /* ── Dot visual ── */
+  .dots-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+  .dots-legend { display: flex; gap: 16px; }
+  .dots-legend span { font-size: 0.72rem; font-weight: 800; }
+  .dot-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+  .dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+  .dot.a { background: var(--blue-lt); }
+  .dot.b { background: var(--green-lt); }
+
+  /* ── Equation ── */
+  .equation {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .eq-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.4rem, 8vw, 3.4rem);
+    padding: 10px 18px; border-radius: 16px;
+    min-width: 82px; text-align: center;
+    animation: popIn 0.2s ease both;
+  }
+  .eq-num.a { background: var(--blue-bg);  color: var(--blue); }
+  .eq-num.b { background: var(--green-bg); color: var(--green); }
+  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .eq-op {
+    font-family: 'Fredoka One', cursive; font-size: clamp(2rem, 6vw, 2.8rem);
+    width: 54px; height: 54px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: var(--blue-lt); color: white; flex-shrink: 0;
+  }
+  .eq-equals { font-family: 'Fredoka One', cursive; font-size: clamp(2rem, 6vw, 2.8rem); color: var(--soft); }
+
+  /* ── Answer input ── */
+  .ans-input {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 7vw, 2.8rem);
+    width: 110px; text-align: center;
+    border: 3px solid #d1d5db; border-radius: 16px;
+    padding: 10px 8px; outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text); background: #f9fafb;
+    -moz-appearance: textfield;
+  }
+  .ans-input::-webkit-outer-spin-button,
+  .ans-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .ans-input:focus     { border-color: var(--green-lt); background: var(--green-bg); }
+  .ans-input.correct-i { border-color: var(--green);   background: var(--green-bg); color: var(--green); }
+  .ans-input.wrong-i   { border-color: var(--red);     background: var(--red-bg);   color: var(--red); }
+  .ans-input.timeout-i { border-color: var(--amber);   background: var(--amber-bg); color: var(--amber); }
+
+  /* ── Check button ── */
+  .check-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    padding: 11px 32px; background: var(--green-lt); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--green);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--green); }
+  .check-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--green); }
+  .check-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+  /* ── Feedback ── */
+  .feedback {
+    width: 100%; border-radius: 14px; padding: 10px 14px;
+    font-size: 0.9rem; font-weight: 800; text-align: center;
+    display: none; animation: slideDown 0.18s ease;
+  }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .feedback.ok      { background: var(--green-bg); color: var(--green); display: block; }
+  .feedback.err     { background: var(--red-bg);   color: var(--red);   display: block; }
+  .feedback.timeout { background: var(--amber-bg); color: var(--amber); display: block; }
+
+  /* ── Next button ── */
+  .next-btn {
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
+    padding: 10px 30px; background: var(--blue-lt); color: white;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: all 0.16s; box-shadow: 0 4px 0 var(--blue); display: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .next-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 var(--blue); }
+  .next-btn:active { transform: translateY(2px);  box-shadow: 0 2px 0 var(--blue); }
+  .next-btn.show { display: block; }
+
+  /* ── Progress ── */
+  .progress-wrap { width: 100%; max-width: 480px; margin-top: 6px; }
+  .prog-track { background: #e5e7eb; border-radius: 99px; height: 9px; overflow: hidden; }
+  .prog-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green-lt), var(--blue-lt)); transition: width 0.35s ease; width: 0%; }
+  .prog-label { font-size: 0.72rem; color: var(--soft); text-align: right; margin-top: 3px; font-weight: 800; }
+
+  .reset-btn {
+    margin-top: 8px; font-family: 'Nunito', sans-serif; font-weight: 700;
+    font-size: 0.76rem; color: var(--soft); background: none;
+    border: 2px solid #e5e7eb; padding: 5px 14px; border-radius: 50px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .reset-btn:hover { border-color: var(--soft); color: var(--text); }
+
+  #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <h1>➕ Add Within 20</h1>
+  <p>Primary 1 · Mental Addition · Timed</p>
+</header>
+
+<div class="controls">
+  <button class="level-btn easy active" onclick="setLevel('easy')">⭐ Easy</button>
+  <button class="level-btn medium"      onclick="setLevel('medium')">🔥 Medium</button>
+  <button class="level-btn hard"        onclick="setLevel('hard')">💎 Hard</button>
+</div>
+
+<div class="scoreboard">
+  <div class="score-box c"><div class="lbl">Correct</div><div class="val" id="sc-c">0</div></div>
+  <div class="score-box w"><div class="lbl">Wrong</div>  <div class="val" id="sc-w">0</div></div>
+  <div class="score-box t"><div class="lbl">Total</div>  <div class="val" id="sc-t">0</div></div>
+</div>
+
+<div class="game-card">
+  <div class="timer-wrap">
+    <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+    <div class="timer-row">
+      <div class="timer-hint">⏱ Type your answer and tap Check</div>
+      <div class="timer-label" id="timer-label"></div>
+    </div>
+  </div>
+  <div id="dots-area"></div>
+  <div class="equation" id="equation"></div>
+  <button class="check-btn" id="check-btn" onclick="submitAnswer()">Check ✓</button>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQ()">Next ➜</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-label" id="prog-label">0 / 10 questions</div>
+</div>
+<button class="reset-btn" onclick="resetGame()">↺ Reset Score</button>
+<a href="index.html" style="margin-top:4px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.76rem;color:#6b7280;background:none;border:2px solid #e5e7eb;padding:5px 14px;border-radius:50px;text-decoration:none;display:inline-block;">🏠 Home</a>
+
+<script>
+// easy:   sums to 10,  15s, dots shown
+// medium: sums to 20,  10s, dots shown
+// hard:   sums to 20,  6s,  no dots
+
+const TIMER_SECS = { easy: 15, medium: 10, hard: 6 };
+const MAX_SUM    = { easy: 10, medium: 20, hard: 20 };
+const SHOW_DOTS  = { easy: true, medium: true, hard: false };
+
+let level = 'easy';
+let sc = 0, sw = 0, st = 0, qCount = 0;
+const TOTAL = 10;
+let answered = false;
+let numA, numB, correctAnswer;
+let timerInterval = null, timeLeft = 0, timeTotal = 0;
+
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+function setLevel(l) {
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.level-btn.' + l).classList.add('active');
+  resetGame();
+}
+
+// ── Generate ──────────────────────────────────────────
+function generateQ() {
+  answered = false;
+  clearTimer();
+
+  const maxSum = MAX_SUM[level];
+  numA = rand(1, maxSum - 1);
+  numB = rand(1, maxSum - numA);
+  correctAnswer = numA + numB;
+
+  renderDots();
+  renderEquation();
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('check-btn').disabled = false;
+  document.getElementById('check-btn').style.display = '';
+
+  startTimer(TIMER_SECS[level]);
+
+  // Focus input after short delay (allows layout to settle on iPad)
+  setTimeout(() => {
+    const inp = document.getElementById('ans-input');
+    if (inp) inp.focus();
+  }, 80);
+}
+
+// ── Dots visual ───────────────────────────────────────
+function renderDots() {
+  const area = document.getElementById('dots-area');
+  if (!SHOW_DOTS[level]) { area.innerHTML = ''; return; }
+
+  let dotsA = '', dotsB = '';
+  for (let i = 0; i < numA; i++) dotsA += '<div class="dot a"></div>';
+  for (let i = 0; i < numB; i++) dotsB += '<div class="dot b"></div>';
+
+  area.innerHTML =
+    '<div class="dots-wrap">' +
+      '<div class="dot-row">' + dotsA + '</div>' +
+      '<div class="dot-row">' + dotsB + '</div>' +
+      '<div class="dots-legend">' +
+        '<span style="color:var(--blue)">● ' + numA + '</span>' +
+        '<span style="color:var(--green)">● ' + numB + '</span>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── Equation ──────────────────────────────────────────
+function renderEquation() {
+  document.getElementById('equation').innerHTML =
+    '<div class="eq-num a" style="animation-delay:0ms">'  + numA + '</div>' +
+    '<div class="eq-op">+</div>' +
+    '<div class="eq-num b" style="animation-delay:70ms">' + numB + '</div>' +
+    '<div class="eq-equals">=</div>' +
+    '<input class="ans-input" id="ans-input" type="number" min="0" max="20" ' +
+    'placeholder="?" autocomplete="off" inputmode="numeric"/>';
+
+  document.getElementById('ans-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitAnswer();
+  });
+}
+
+// ── Timer ─────────────────────────────────────────────
+function startTimer(secs) {
+  timeTotal = secs; timeLeft = secs;
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timeLeft = Math.max(0, timeLeft - 0.1);
+    updateTimerUI();
+    if (timeLeft <= 0) { clearTimer(); timeUp(); }
+  }, 100);
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerUI() {
+  const pct  = (timeLeft / timeTotal) * 100;
+  const fill = document.getElementById('timer-fill');
+  const lbl  = document.getElementById('timer-label');
+  fill.style.width = pct + '%';
+  fill.className = 'timer-fill' + (pct < 30 ? ' danger' : pct < 55 ? ' warn' : '');
+  lbl.textContent = Math.ceil(timeLeft) + 's';
+}
+
+function timeUp() {
+  if (answered) return;
+  answered = true; st++; qCount++; sw++;
+  const inp = document.getElementById('ans-input');
+  if (inp) { inp.disabled = true; inp.value = correctAnswer; inp.classList.add('timeout-i'); }
+  document.getElementById('check-btn').disabled = true;
+  showFeedback('timeout', '⏱️ Time\'s up!  ' + numA + ' + ' + numB + ' = ' + correctAnswer);
+  updateScore(); updateProgress();
+  if (qCount < TOTAL) document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen, 800);
+}
+
+// ── Submit ────────────────────────────────────────────
+function submitAnswer() {
+  if (answered) return;
+  const inp = document.getElementById('ans-input');
+  const raw = inp.value.trim();
+  if (raw === '') {
+    inp.focus();
+    // flash border as hint
+    inp.style.borderColor = '#fbbf24';
+    setTimeout(() => { inp.style.borderColor = ''; }, 600);
+    return;
+  }
+  const val = parseInt(raw, 10);
+  if (isNaN(val)) { inp.focus(); return; }
+
+  answered = true; st++; qCount++;
+  clearTimer();
+  inp.disabled = true;
+  document.getElementById('check-btn').disabled = true;
+
+  const correct = val === correctAnswer;
+  if (correct) {
+    sc++;
+    inp.classList.add('correct-i');
+    launchConfetti();
+  } else {
+    sw++;
+    inp.classList.add('wrong-i');
+    inp.value = correctAnswer;
+  }
+
+  showFeedback(
+    correct ? 'ok' : 'err',
+    correct
+      ? '🎉 Correct!  ' + numA + ' + ' + numB + ' = ' + correctAnswer
+      : '❌ The answer is ' + correctAnswer + '.  ' + numA + ' + ' + numB + ' = ' + correctAnswer
+  );
+
+  updateScore(); updateProgress();
+  if (qCount < TOTAL) document.getElementById('next-btn').classList.add('show');
+  else setTimeout(showEndScreen, 800);
+}
+
+// ── Helpers ───────────────────────────────────────────
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function nextQ() { generateQ(); }
+
+function updateScore() {
+  document.getElementById('sc-c').textContent = sc;
+  document.getElementById('sc-w').textContent = sw;
+  document.getElementById('sc-t').textContent = st;
+}
+
+function updateProgress() {
+  const pct = (qCount / TOTAL) * 100;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = qCount + ' / ' + TOTAL + ' questions';
+}
+
+function showEndScreen() {
+  clearTimer();
+  const pct = Math.round((sc / TOTAL) * 100);
+  let msg, em;
+  if (pct === 100)    { msg = 'Perfect adding!';          em = '🏆'; }
+  else if (pct >= 70) { msg = 'Great work! Keep it up!';  em = '🌟'; }
+  else                { msg = 'Keep practising!';          em = '💪'; }
+
+  document.getElementById('dots-area').innerHTML = '';
+  document.getElementById('equation').innerHTML =
+    '<div style="width:100%;text-align:center;padding:12px 0;">' +
+      '<div style="font-size:2.8rem;">' + em + '</div>' +
+      '<div style="font-family:\'Fredoka One\',cursive;font-size:1.25rem;color:var(--text);margin-top:8px;">' + msg + '</div>' +
+      '<div style="font-size:0.9rem;color:var(--soft);margin-top:5px;font-weight:700;">Score: ' + sc + ' / ' + TOTAL + ' (' + pct + '%)</div>' +
+      '<button onclick="resetGame()" style="margin-top:14px;font-family:\'Nunito\',sans-serif;font-weight:800;font-size:0.9rem;padding:9px 26px;background:var(--green-lt);color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 var(--green);">Play Again!</button>' +
+    '</div>';
+
+  document.getElementById('check-btn').style.display = 'none';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('timer-fill').style.width = '0%';
+  document.getElementById('timer-label').textContent = '';
+
+  if (pct === 100) launchConfetti(180);
+}
+
+function resetGame() {
+  clearTimer();
+  sc = sw = st = qCount = 0;
+  updateScore(); updateProgress(); generateQ();
+}
+
+function launchConfetti(count) {
+  count = count || 55;
+  const cv = document.getElementById('confetti-canvas');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const cols = ['#22c55e','#60a5fa','#fbbf24','#f43f5e','#a855f7'];
+  const ps = Array.from({length: count}, () => ({
+    x: Math.random()*cv.width, y: -10, r: Math.random()*5+3,
+    color: cols[Math.floor(Math.random()*cols.length)],
+    ta: 0, tai: Math.random()*0.07+0.04, vx: Math.random()*2-1, vy: Math.random()*3+2
+  }));
+  let ttl = 110;
+  (function draw() {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p => {
+      p.ta+=p.tai; p.y+=p.vy; p.x+=p.vx;
+      ctx.beginPath(); ctx.lineWidth=p.r/2; ctx.strokeStyle=p.color;
+      ctx.moveTo(p.x+Math.sin(p.ta)*12+p.r/4, p.y);
+      ctx.lineTo(p.x+Math.sin(p.ta)*12,        p.y+p.r/4);
+      ctx.stroke();
+    });
+    if (--ttl > 0) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+generateQ();
+</script>
+</body>
+</html>
