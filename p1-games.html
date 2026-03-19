@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 Maths Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fff7ed;
+  --card-bg: rgba(255,255,255,0.75);
+  --card-border: rgba(251,191,36,0.25);
+  --text: #1c1917;
+  --muted: rgba(28,25,23,0.50);
+  --na: #f97316;
+  --mg: #eab308;
+  --st: #84cc16;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(251,191,36,.20) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(249,115,22,.14) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(132,204,22,.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hero */
+.hero {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 48px 20px 32px;
+}
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .75rem; font-weight: 800; color: var(--muted);
+  text-decoration: none; background: rgba(0,0,0,.06);
+  border: 1px solid rgba(0,0,0,.10); padding: 5px 14px;
+  border-radius: 99px; margin-bottom: 18px;
+  transition: background .15s;
+}
+.back-btn:hover { background: rgba(0,0,0,.1); }
+.hero h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.05;
+  background: linear-gradient(135deg, #f97316 0%, #fbbf24 60%, #84cc16 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+.hero p {
+  font-size: clamp(.88rem, 2.5vw, 1rem);
+  color: var(--muted); font-weight: 700;
+  max-width: 480px; margin: 0 auto 20px; line-height: 1.6;
+}
+.stats-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.stat-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.7); border: 1px solid rgba(0,0,0,.10);
+  border-radius: 99px; padding: 5px 14px;
+  font-size: .76rem; font-weight: 800; color: var(--muted);
+}
+.stat-chip span { color: var(--text); }
+
+/* Main layout */
+main {
+  position: relative; z-index: 1;
+  max-width: 1060px; margin: 0 auto;
+  padding: 0 16px 56px;
+}
+
+/* Strand sections */
+.strand { margin-bottom: 40px; }
+.strand-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.strand-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.strand.na .strand-dot { background: var(--na); box-shadow: 0 0 7px var(--na); }
+.strand.mg .strand-dot { background: var(--mg); box-shadow: 0 0 7px var(--mg); }
+.strand.st .strand-dot { background: var(--st); box-shadow: 0 0 7px var(--st); }
+.strand-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; }
+.strand.na .strand-title { color: var(--na); }
+.strand.mg .strand-title { color: #d97706; }
+.strand.st .strand-title { color: #65a30d; }
+
+/* Cards grid */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+.card {
+  display: block; text-decoration: none;
+  background: var(--card-bg); border: 1.5px solid var(--card-border);
+  border-radius: 18px; padding: 18px 16px 14px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s;
+  position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.card::before {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 18px; opacity: 0; transition: opacity .18s;
+}
+.strand.na .card::before  { background: radial-gradient(ellipse at top left, rgba(249,115,22,.10), transparent 70%); }
+.strand.mg .card::before  { background: radial-gradient(ellipse at top left, rgba(234,179,8,.10), transparent 70%); }
+.strand.st .card::before  { background: radial-gradient(ellipse at top left, rgba(132,204,22,.10), transparent 70%); }
+.card:hover::before { opacity: 1; }
+.card:hover { transform: translateY(-4px); border-color: rgba(0,0,0,.18); box-shadow: 0 10px 32px rgba(0,0,0,.12); }
+.card:active { transform: translateY(-1px); }
+
+.card-icon { font-size: 1.8rem; line-height: 1; margin-bottom: 8px; display: block; }
+.card-title { font-family: 'Fredoka One', cursive; font-size: 1rem; line-height: 1.2; color: var(--text); margin-bottom: 5px; }
+.card-desc { font-size: .70rem; font-weight: 700; color: var(--muted); line-height: 1.5; }
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px; padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,.07);
+}
+.difficulty-dots { display: flex; gap: 4px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(0,0,0,.12); }
+.strand.na .dot.filled { background: var(--na); }
+.strand.mg .dot.filled { background: var(--mg); }
+.strand.st .dot.filled { background: var(--st); }
+.play-arrow { font-size: .70rem; font-weight: 800; opacity: .35; transition: opacity .15s, transform .15s; }
+.strand.na .play-arrow { color: var(--na); }
+.strand.mg .play-arrow { color: #d97706; }
+.strand.st .play-arrow { color: #65a30d; }
+.card:hover .play-arrow { opacity: 1; transform: translateX(3px); }
+
+/* Reveal animation */
+.strand { opacity: 0; transform: translateY(20px); animation: revealStrand .5s ease forwards; }
+.strand:nth-child(1){animation-delay:.08s;}
+.strand:nth-child(2){animation-delay:.20s;}
+.strand:nth-child(3){animation-delay:.32s;}
+@keyframes revealStrand { to { opacity: 1; transform: none; } }
+
+/* Floating doodles */
+.doodle {
+  position: fixed; font-family: 'Fredoka One', cursive;
+  opacity: .06; user-select: none; pointer-events: none;
+  font-size: clamp(2rem, 5vw, 4rem); color: #92400e;
+  animation: floatDoodle 8s ease-in-out infinite;
+}
+.doodle:nth-child(1){top:8%;left:3%;animation-delay:0s;}
+.doodle:nth-child(2){top:22%;right:4%;animation-delay:-2s;font-size:2.5rem;}
+.doodle:nth-child(3){top:60%;left:2%;animation-delay:-4s;font-size:3rem;}
+.doodle:nth-child(4){top:72%;right:3%;animation-delay:-6s;}
+@keyframes floatDoodle{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-18px) rotate(5deg);}}
+
+@media (max-width: 480px) {
+  .cards { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .card { padding: 12px 10px 10px; }
+  .card-icon { font-size: 1.4rem; }
+  .card-title { font-size: .88rem; }
+  .card-desc { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="doodle" aria-hidden="true">+</div>
+<div class="doodle" aria-hidden="true">÷</div>
+<div class="doodle" aria-hidden="true">1</div>
+<div class="doodle" aria-hidden="true">%</div>
+
+<header class="hero">
+  <a class="back-btn" href="index.html">← Back to all levels</a>
+  <h1>Primary 1<br>Maths Games</h1>
+  <p>15 games covering numbers, measurement and data. Pick a topic and start practising!</p>
+  <div class="stats-row">
+    <div class="stat-chip">🎮 <span>15 games</span></div>
+    <div class="stat-chip">⭐ <span>3 difficulty levels each</span></div>
+    <div class="stat-chip">📱 <span>iPad friendly</span></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Number & Algebra -->
+  <section class="strand na">
+    <div class="strand-header">
+      <div class="strand-dot"></div>
+      <h2 class="strand-title">Number &amp; Algebra</h2>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="p1-lo1-counting-game.html">
+        <span class="card-icon">🔢</span>
+        <div class="card-title">Counting Objects</div>
+        <div class="card-desc">Count objects in a set. Build number sense up to 100.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo2-place-value.html">
+        <span class="card-icon">🏗️</span>
+        <div class="card-title">Place Value</div>
+        <div class="card-desc">Understand tens and ones. Read and write numbers up to 100.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo3-compare-order.html">
+        <span class="card-icon">⚖️</span>
+        <div class="card-title">Compare &amp; Order Numbers</div>
+        <div class="card-desc">Compare and order numbers up to 100 using &gt;, &lt; and =.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo4-number-patterns.html">
+        <span class="card-icon">🔁</span>
+        <div class="card-title">Number Patterns</div>
+        <div class="card-desc">Spot and continue number sequences. Find the missing number.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo5-ordinal-numbers.html">
+        <span class="card-icon">🥇</span>
+        <div class="card-title">Ordinal Numbers</div>
+        <div class="card-desc">Identify positions: 1st to 10th. Use ordinal number symbols.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo6-add-within-20.html">
+        <span class="card-icon">➕</span>
+        <div class="card-title">Add Within 20</div>
+        <div class="card-desc">Mental addition within 20. Build speed and fluency.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo7-subtract-within-20.html">
+        <span class="card-icon">➖</span>
+        <div class="card-title">Subtract Within 20</div>
+        <div class="card-desc">Mental subtraction within 20. Practise number bonds.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo8-add-2digit-ones.html">
+        <span class="card-icon">🔡</span>
+        <div class="card-title">Add 2-Digit + Ones</div>
+        <div class="card-desc">Add a 2-digit number and a 1-digit number without renaming.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo9-add-2digit-tens.html">
+        <span class="card-icon">🔟</span>
+        <div class="card-title">Add 2-Digit + Tens</div>
+        <div class="card-desc">Add a 2-digit number and a multiple of ten mentally.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo10-cents.html">
+        <span class="card-icon">🪙</span>
+        <div class="card-title">Counting Cents</div>
+        <div class="card-desc">Count amounts of money in cents up to $1.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo11-dollars.html">
+        <span class="card-icon">💵</span>
+        <div class="card-title">Counting Dollars</div>
+        <div class="card-desc">Count amounts of money in dollars up to $100.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Measurement & Geometry -->
+  <section class="strand mg">
+    <div class="strand-header">
+      <div class="strand-dot"></div>
+      <h2 class="strand-title">Measurement &amp; Geometry</h2>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="p1-lo12-time.html">
+        <span class="card-icon">🕐</span>
+        <div class="card-title">Telling Time</div>
+        <div class="card-desc">Read analogue clocks to the nearest 5 minutes. Use am and pm.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo13-ampm.html">
+        <span class="card-icon">🌅</span>
+        <div class="card-title">AM &amp; PM</div>
+        <div class="card-desc">Identify whether a time is AM or PM from everyday contexts.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+      <a class="card" href="p1-lo14-shapes.html">
+        <span class="card-icon">🔷</span>
+        <div class="card-title">2D Shapes</div>
+        <div class="card-desc">Identify and name rectangles, squares, triangles, circles, half circles and quarter circles.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Statistics -->
+  <section class="strand st">
+    <div class="strand-header">
+      <div class="strand-dot"></div>
+      <h2 class="strand-title">Statistics</h2>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="p1-lo15-picture-graph.html">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Picture Graphs</div>
+        <div class="card-desc">Read and interpret data from picture graphs.</div>
+        <div class="card-footer">
+          <div class="difficulty-dots"><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div></div>
+          <span class="play-arrow">Play ›</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>
